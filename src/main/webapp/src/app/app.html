@@ -1,0 +1,39 @@
+<header class="header">
+  <div class="logo">
+    <a routerLink="/" class="logo-link">
+      <h1>StaffPlan</h1>
+    </a>
+  </div>
+  <nav class="nav">
+    @if (authService.isAuthenticated()) {
+      <a routerLink="/positions" routerLinkActive="active" class="nav-link">Positions</a>
+      <span class="user-info">
+        {{ authService.user()?.firstName }} {{ authService.user()?.lastName }}
+        @if (authService.user()?.roles?.length) {
+          <span class="role-badges">
+            @for (role of authService.user()?.roles; track role) {
+              <span class="role-badge">{{ role }}</span>
+            }
+          </span>
+        }
+      </span>
+      <button class="btn btn-outline" (click)="authService.logout()">Logout</button>
+    } @else {
+      <button class="btn btn-primary" (click)="authService.login()">Login</button>
+    }
+  </nav>
+</header>
+
+<main class="main">
+  @if (!authService.isAuthenticated()) {
+    <div class="welcome-card">
+      <h2>Welcome to StaffPlan</h2>
+      <p>Please login to access the application.</p>
+      <button class="btn btn-primary btn-large" (click)="authService.login()">
+        Login with Keycloak
+      </button>
+    </div>
+  }
+
+  <router-outlet />
+</main>

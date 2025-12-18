@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
+                   objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
+
+    <!-- Users table -->
+    <changeSet id="001-1" author="krusche">
+        <createTable tableName="users">
+            <column name="user_id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_users"/>
+            </column>
+            <column name="university_id" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="matriculation_number" type="VARCHAR(255)"/>
+            <column name="email" type="VARCHAR(255)"/>
+            <column name="avatar" type="VARCHAR(255)"/>
+            <column name="first_name" type="VARCHAR(255)"/>
+            <column name="last_name" type="VARCHAR(255)"/>
+            <column name="gender" type="VARCHAR(255)"/>
+            <column name="nationality" type="VARCHAR(255)"/>
+            <column name="cv_filename" type="VARCHAR(255)"/>
+            <column name="degree_filename" type="VARCHAR(255)"/>
+            <column name="examination_filename" type="VARCHAR(255)"/>
+            <column name="study_degree" type="VARCHAR(255)"/>
+            <column name="study_program" type="VARCHAR(255)"/>
+            <column name="projects" type="TEXT"/>
+            <column name="interests" type="TEXT"/>
+            <column name="special_skills" type="TEXT"/>
+            <column name="custom_data" type="JSONB"/>
+            <column name="enrolled_at" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="updated_at" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="joined_at" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="research_group_id" type="UUID"/>
+        </createTable>
+    </changeSet>
+
+    <!-- Research Groups table -->
+    <changeSet id="001-2" author="krusche">
+        <createTable tableName="research_groups">
+            <column name="research_group_id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_research_groups"/>
+            </column>
+            <column name="head_user_id" type="UUID"/>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="abbreviation" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="VARCHAR(500)"/>
+            <column name="website_url" type="VARCHAR(255)"/>
+            <column name="campus" type="VARCHAR(255)"/>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_by" type="UUID"/>
+            <column name="updated_at" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_by" type="UUID"/>
+            <column name="archived" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <!-- User Groups join table -->
+    <changeSet id="001-3" author="krusche">
+        <createTable tableName="user_groups">
+            <column name="user_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="role" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addPrimaryKey tableName="user_groups" columnNames="user_id, role" constraintName="pk_user_groups"/>
+    </changeSet>
+
+    <!-- Unique constraints -->
+    <changeSet id="001-4" author="krusche">
+        <addUniqueConstraint tableName="research_groups" columnNames="name" constraintName="uc_research_groups_name"/>
+        <addUniqueConstraint tableName="research_groups" columnNames="abbreviation" constraintName="uc_research_groups_abbreviation"/>
+        <addUniqueConstraint tableName="research_groups" columnNames="head_user_id" constraintName="uc_research_groups_head"/>
+    </changeSet>
+
+    <!-- Foreign key constraints -->
+    <changeSet id="001-5" author="krusche">
+        <addForeignKeyConstraint baseTableName="users" baseColumnNames="research_group_id"
+                                 referencedTableName="research_groups" referencedColumnNames="research_group_id"
+                                 constraintName="fk_users_research_group"/>
+
+        <addForeignKeyConstraint baseTableName="research_groups" baseColumnNames="head_user_id"
+                                 referencedTableName="users" referencedColumnNames="user_id"
+                                 constraintName="fk_research_groups_head"/>
+
+        <addForeignKeyConstraint baseTableName="research_groups" baseColumnNames="created_by"
+                                 referencedTableName="users" referencedColumnNames="user_id"
+                                 constraintName="fk_research_groups_created_by"/>
+
+        <addForeignKeyConstraint baseTableName="research_groups" baseColumnNames="updated_by"
+                                 referencedTableName="users" referencedColumnNames="user_id"
+                                 constraintName="fk_research_groups_updated_by"/>
+
+        <addForeignKeyConstraint baseTableName="user_groups" baseColumnNames="user_id"
+                                 referencedTableName="users" referencedColumnNames="user_id"
+                                 constraintName="fk_user_groups_user"/>
+    </changeSet>
+
+    <!-- Indexes for performance -->
+    <changeSet id="001-6" author="krusche">
+        <createIndex tableName="users" indexName="idx_users_university_id">
+            <column name="university_id"/>
+        </createIndex>
+        <createIndex tableName="users" indexName="idx_users_email">
+            <column name="email"/>
+        </createIndex>
+        <createIndex tableName="users" indexName="idx_users_research_group">
+            <column name="research_group_id"/>
+        </createIndex>
+    </changeSet>
+
+    <!-- Positions table for staff planning -->
+    <changeSet id="001-7" author="krusche">
+        <createTable tableName="positions">
+            <column name="position_id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_positions"/>
+            </column>
+            <column name="position_relevance_type" type="VARCHAR(255)"/>
+            <column name="object_id" type="VARCHAR(255)"/>
+            <column name="status" type="VARCHAR(50)"/>
+            <column name="object_code" type="VARCHAR(100)"/>
+            <column name="object_description" type="VARCHAR(500)"/>
+            <column name="position_value" type="DECIMAL(10,2)"/>
+            <column name="department_id" type="VARCHAR(100)"/>
+            <column name="organization_unit" type="VARCHAR(255)"/>
+            <column name="tariff_group" type="VARCHAR(50)"/>
+            <column name="base_grade" type="VARCHAR(50)"/>
+            <column name="percentage" type="DECIMAL(5,2)"/>
+            <column name="start_date" type="DATE"/>
+            <column name="end_date" type="DATE"/>
+            <column name="fund" type="VARCHAR(100)"/>
+            <column name="department_id_2" type="VARCHAR(100)"/>
+            <column name="personnel_number" type="VARCHAR(50)"/>
+            <column name="employee_group" type="VARCHAR(100)"/>
+            <column name="employee_circle" type="VARCHAR(100)"/>
+            <column name="entry_date" type="DATE"/>
+            <column name="expected_exit_date" type="DATE"/>
+            <column name="research_group_id" type="UUID"/>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <!-- Foreign key for positions to research_groups -->
+    <changeSet id="001-8" author="krusche">
+        <addForeignKeyConstraint baseTableName="positions" baseColumnNames="research_group_id"
+                                 referencedTableName="research_groups" referencedColumnNames="research_group_id"
+                                 constraintName="fk_positions_research_group"/>
+    </changeSet>
+
+    <!-- Indexes for positions -->
+    <changeSet id="001-9" author="krusche">
+        <createIndex tableName="positions" indexName="idx_positions_research_group">
+            <column name="research_group_id"/>
+        </createIndex>
+        <createIndex tableName="positions" indexName="idx_positions_dates">
+            <column name="start_date"/>
+            <column name="end_date"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

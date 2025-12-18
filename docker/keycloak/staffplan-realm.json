@@ -1,0 +1,261 @@
+{
+  "realm": "staffplan",
+  "enabled": true,
+  "sslRequired": "none",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": true,
+  "editUsernameAllowed": false,
+  "bruteForceProtected": true,
+  "permanentLockout": false,
+  "maxFailureWaitSeconds": 900,
+  "minimumQuickLoginWaitSeconds": 60,
+  "waitIncrementSeconds": 60,
+  "quickLoginCheckMilliSeconds": 1000,
+  "maxDeltaTimeSeconds": 43200,
+  "failureFactor": 30,
+  "defaultRole": {
+    "name": "default-roles-staffplan",
+    "description": "${role_default-roles}",
+    "composite": true,
+    "clientRole": false
+  },
+  "roles": {
+    "realm": [
+      {
+        "name": "admin",
+        "description": "Administrator with full access",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "job_manager",
+        "description": "Job Manager role",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "professor",
+        "description": "Professor role",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "employee",
+        "description": "Employee role",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "default-roles-staffplan",
+        "description": "${role_default-roles}",
+        "composite": true,
+        "clientRole": false
+      }
+    ],
+    "client": {
+      "staffplan-client": [
+        {
+          "name": "admin",
+          "description": "Administrator with full access",
+          "composite": false,
+          "clientRole": true
+        },
+        {
+          "name": "job_manager",
+          "description": "Job Manager role",
+          "composite": false,
+          "clientRole": true
+        },
+        {
+          "name": "professor",
+          "description": "Professor role",
+          "composite": false,
+          "clientRole": true
+        },
+        {
+          "name": "employee",
+          "description": "Employee role",
+          "composite": false,
+          "clientRole": true
+        }
+      ]
+    }
+  },
+  "defaultDefaultClientScopes": [
+    "web-origins",
+    "acr",
+    "profile",
+    "roles",
+    "email",
+    "basic"
+  ],
+  "defaultOptionalClientScopes": [
+    "offline_access",
+    "address",
+    "phone",
+    "microprofile-jwt"
+  ],
+  "clients": [
+    {
+      "clientId": "staffplan-client",
+      "name": "StaffPlan Client",
+      "description": "StaffPlan Angular Application",
+      "enabled": true,
+      "alwaysDisplayInConsole": false,
+      "clientAuthenticatorType": "client-secret",
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": false,
+      "authorizationServicesEnabled": false,
+      "frontchannelLogout": true,
+      "fullScopeAllowed": true,
+      "rootUrl": "http://localhost:4200",
+      "baseUrl": "/",
+      "redirectUris": [
+        "http://localhost:4200/*",
+        "http://localhost:5173/*",
+        "http://localhost:8080/*"
+      ],
+      "webOrigins": [
+        "http://localhost:4200",
+        "http://localhost:5173",
+        "http://localhost:8080"
+      ],
+      "attributes": {
+        "oidc.ciba.grant.enabled": "false",
+        "oauth2.device.authorization.grant.enabled": "false",
+        "backchannel.logout.session.required": "true",
+        "backchannel.logout.revoke.offline.tokens": "false",
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "http://localhost:4200/*##http://localhost:5173/*"
+      },
+      "defaultClientScopes": [
+        "web-origins",
+        "acr",
+        "profile",
+        "roles",
+        "email",
+        "basic"
+      ],
+      "optionalClientScopes": [
+        "offline_access",
+        "address",
+        "phone",
+        "microprofile-jwt"
+      ],
+      "protocolMappers": [
+        {
+          "name": "client-roles",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-client-role-mapper",
+          "consentRequired": false,
+          "config": {
+            "introspection.token.claim": "true",
+            "multivalued": "true",
+            "userinfo.token.claim": "true",
+            "id.token.claim": "true",
+            "lightweight.claim": "false",
+            "access.token.claim": "true",
+            "claim.name": "resource_access.${client_id}.roles",
+            "jsonType.label": "String",
+            "usermodel.clientRoleMapping.clientId": "staffplan-client"
+          }
+        }
+      ]
+    }
+  ],
+  "users": [
+    {
+      "username": "admin",
+      "email": "admin@staffplan.local",
+      "firstName": "Admin",
+      "lastName": "User",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "admin",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "default-roles-staffplan",
+        "admin"
+      ],
+      "clientRoles": {
+        "staffplan-client": ["admin"]
+      }
+    },
+    {
+      "username": "jobmanager",
+      "email": "jobmanager@staffplan.local",
+      "firstName": "Job",
+      "lastName": "Manager",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "jobmanager",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "default-roles-staffplan",
+        "job_manager"
+      ],
+      "clientRoles": {
+        "staffplan-client": ["job_manager"]
+      }
+    },
+    {
+      "username": "professor",
+      "email": "professor@staffplan.local",
+      "firstName": "Professor",
+      "lastName": "User",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "professor",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "default-roles-staffplan",
+        "professor"
+      ],
+      "clientRoles": {
+        "staffplan-client": ["professor"]
+      }
+    },
+    {
+      "username": "employee",
+      "email": "employee@staffplan.local",
+      "firstName": "Employee",
+      "lastName": "User",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "employee",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "default-roles-staffplan",
+        "employee"
+      ],
+      "clientRoles": {
+        "staffplan-client": ["employee"]
+      }
+    }
+  ]
+}

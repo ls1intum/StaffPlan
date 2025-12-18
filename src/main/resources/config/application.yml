@@ -1,0 +1,76 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/staffplan
+    username: postgres
+    password: staffplan
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    open-in-view: false
+    show-sql: false
+    hibernate:
+      ddl-auto: validate
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy
+        implicit-strategy: org.springframework.boot.hibernate.SpringImplicitNamingStrategy
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.xml
+
+  profiles:
+    active: local
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8081/realms/staffplan
+
+logging:
+  level:
+    org.springframework: INFO
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: when-authorized
+
+staffplan:
+  keycloak:
+    client-id: staffplan-client
+  client:
+    host: http://localhost:4200
+  cors:
+    allowed-origins:
+      - "http://localhost:4200"
+      - "http://localhost:5173"
+      - "http://localhost:3000"
+      - "http://localhost:8080"
+  ai:
+    enabled: true
+    commit-classifier:
+      enabled: true
+      confidence-threshold: 0.7
+    anomaly-detector:
+      enabled: true
+      confidence-threshold: 0.7
+    file-clustering:
+      enabled: false
+
+artemis:
+  baseUrl: 
+  username: 
+  password: 
+  jwtToken: 
+  exerciseId: 424
+  gitRepoPath: Projects/itp2526teamprojects
+  numThreads: 8

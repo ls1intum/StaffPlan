@@ -1,0 +1,121 @@
+plugins {
+    id 'checkstyle'
+    id 'java'
+    id 'com.diffplug.spotless' version '8.1.0'
+    id 'com.github.ben-manes.versions' version '0.53.0'
+    id 'org.springframework.boot' version '4.0.0'
+    id 'io.spring.dependency-management' version '1.1.7'
+    id "org.springdoc.openapi-gradle-plugin" version "1.9.0"
+    id "org.openapi.generator" version "7.17.0"
+    id "com.github.node-gradle.node" version "7.1.0"
+}
+
+group = 'de.tum.cit.aet'
+version = '0.0.1'
+description = 'StaffPlan'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
+}
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+}
+
+wrapper {
+    gradleVersion = "9.2.1"
+}
+
+repositories {
+    mavenCentral()
+    maven { url 'https://repo.spring.io/milestone' }
+}
+
+spotless {
+    java {
+        target "src/*/java/**/*.java"
+        removeUnusedImports()
+        trimTrailingWhitespace()
+        endWithNewline()
+    }
+}
+
+checkstyle {
+    // Exclude everything under the build directory
+    toolVersion = "${checkstyleVersion}"
+    configFile = file("checkstyle.xml")
+    checkstyleTest.enabled = false
+    maxErrors = 0
+}
+
+apply from: "gradle/openapi.gradle"
+
+node {
+    download = true
+    version = "24.12.0"
+    npmVersion = "11.6.2"
+    workDir = file("${project.projectDir}/.gradle/nodejs")
+    nodeProjectDir = file("${project.projectDir}/src/main/webapp")
+}
+
+dependencies {
+
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'org.springframework.boot:spring-boot-starter-batch'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-liquibase'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.springframework.boot:spring-boot-starter-webmvc'
+
+    // use newest version of nimbus-jose-jwt to avoid security issues through outdated dependencies
+    implementation "com.nimbusds:nimbus-jose-jwt:10.6"
+
+    // Main database to persist entities
+    implementation 'org.postgresql:postgresql:42.7.8'
+
+    // Lombok for boilerplate code reduction
+    compileOnly 'org.projectlombok:lombok'
+
+    //Openapi dependencies
+    implementation "org.openapitools:jackson-databind-nullable:${jacksonDatabindNullableVersion}"
+    implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.0"
+    implementation("org.yaml:snakeyaml") {
+        version {
+            strictly "${snakeyaml_version}"
+            // needed to reduce the number of vulnerabilities, also see https://mvnrepository.com/artifact/org.yaml/snakeyaml
+        }
+    }
+
+    annotationProcessor 'org.projectlombok:lombok'
+    annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-actuator-test'
+    testImplementation 'org.springframework.boot:spring-boot-starter-batch-test'
+    testImplementation 'org.springframework.boot:spring-boot-starter-data-jpa-test'
+    testImplementation 'org.springframework.boot:spring-boot-starter-liquibase-test'
+    testImplementation 'org.springframework.boot:spring-boot-starter-validation-test'
+    testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
+
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
+
+// Available commands:
+// -------------------
+// 1) Build production:                             ./gradlew clean bootJar
+// 2) Execute tests:                                ./gradlew test
+// 3) Check Java code format:                       ./gradlew spotlessCheck
+// 4) Apply Java code formatter:                    ./gradlew spotlessApply
+// 5) Check JavaDoc:                                ./gradlew checkstyleMain
+// 6) Find dependency updates:                      ./gradlew dependencyUpdates -Drevision=release
+

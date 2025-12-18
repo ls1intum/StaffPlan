@@ -1,0 +1,15 @@
+spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI:http://keycloak.ase.in.tum.de/realms/staffplan}
+
+staffplan:
+  keycloak:
+    client-id: ${STAFFPLAN_KEYCLOAK_CLIENT_ID:staffplan-client}
+  client:
+    host: ${STAFFPLAN_CLIENT_HOST:https://staffplan.aet.cit.tum.de}
+  cors:
+    allowed-origins:
+      - ${STAFFPLAN_CORS_ALLOWED_ORIGINS:https://staffplan.aet.cit.tum.de}
