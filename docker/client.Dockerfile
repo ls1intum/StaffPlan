@@ -1,4 +1,4 @@
-# Build the Angular/Vite client
+# Build the Angular client
 FROM node:24-bookworm-slim AS builder
 WORKDIR /app
 
@@ -11,16 +11,9 @@ ENV NODE_ENV=production
 
 RUN npm run build
 
-# Serve the production build with Caddy
-FROM caddy:2-alpine AS runner
+# Minimal image to hold the built files
+FROM alpine:3.21
 
 COPY --from=builder /app/dist/StaffPlan/browser /srv
-COPY docker/docker-entrypoint.sh /docker-entrypoint.sh
 
-RUN chmod +x /docker-entrypoint.sh && \
-    echo ':80 { root * /srv; file_server; try_files {path} /index.html; encode gzip }' > /etc/caddy/Caddyfile
-
-EXPOSE 80
-
-ENTRYPOINT ["/docker-entrypoint.sh"]
-CMD ["caddy", "run", "--config", "/etc/caddy/Caddyfile"]
+CMD ["sh", "-c", "echo 'Static files ready in /srv' && sleep infinity"]
