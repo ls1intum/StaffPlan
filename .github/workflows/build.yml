@@ -30,3 +30,16 @@ jobs:
       image-name: ghcr.io/ls1intum/staffplan-${{ matrix.service }}
       docker-file: docker/${{ matrix.service }}.Dockerfile
     secrets: inherit
+
+  # Temporary deployment job for testing the production deployment on each push to main
+  deploy-prod:
+    needs: build
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    uses: ls1intum/.github/.github/workflows/deploy-docker-compose.yml@main
+    with:
+      environment: production
+      docker-compose-file: './docker/docker-compose-prod.yml'
+      main-image-name: ghcr.io/ls1intum/staffplan-server
+      image-tag: ${{ github.sha }}
+      deployment-base-path: '/opt/staffplan'
+    secrets: inherit
