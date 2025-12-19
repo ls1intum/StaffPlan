@@ -3,7 +3,7 @@ export const environment = {
   apiUrl: '/api',
   keycloak: {
     url: '__KEYCLOAK_URL__',
-    realm: 'staffplan',
-    clientId: 'staffplan-client',
+    realm: '__KEYCLOAK_REALM__',
+    clientId: '__KEYCLOAK_CLIENT_ID__',
   },
 };

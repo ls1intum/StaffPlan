@@ -65,9 +65,16 @@ services:
     image: ghcr.io/ls1intum/staffplan-client:${IMAGE_TAG}
     volumes:
       - client_dist:/out
-    command: sh -c "cp -r /srv/* /out/ && find /out -type f -name '*.js' -exec sed -i 's|__KEYCLOAK_URL__|'\"$KEYCLOAK_URL\"'|g' {} \\;"
+    command: >
+      sh -c "cp -r /srv/* /out/ &&
+        KEYCLOAK_BASE_URL=$$(echo \"$$KEYCLOAK_ISSUER_URI\" | sed 's|/realms/.*||') &&
+        KEYCLOAK_REALM=$$(echo \"$$KEYCLOAK_ISSUER_URI\" | sed 's|.*/realms/||') &&
+        find /out -type f -name '*.js' -exec sed -i \"s|__KEYCLOAK_URL__|$$KEYCLOAK_BASE_URL|g\" {} \\; &&
+        find /out -type f -name '*.js' -exec sed -i \"s|__KEYCLOAK_REALM__|$$KEYCLOAK_REALM|g\" {} \\; &&
+        find /out -type f -name '*.js' -exec sed -i \"s|__KEYCLOAK_CLIENT_ID__|$$KEYCLOAK_CLIENT_ID|g\" {} \\;"
     environment:
-      KEYCLOAK_URL: ${KEYCLOAK_URL}
+      KEYCLOAK_ISSUER_URI: ${KEYCLOAK_ISSUER_URI}
+      KEYCLOAK_CLIENT_ID: ${KEYCLOAK_CLIENT_ID}
 
   postgres:
     image: postgres:18.1
