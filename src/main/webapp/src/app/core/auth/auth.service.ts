@@ -1,4 +1,5 @@
-import { Injectable, signal, computed } from '@angular/core';
+import { Injectable, signal, computed, PLATFORM_ID, inject } from '@angular/core';
+import { isPlatformServer } from '@angular/common';
 import Keycloak from 'keycloak-js';
 import { environment } from '../../../environments/environment';
 
@@ -16,6 +17,7 @@ export interface User {
 })
 export class AuthService {
   private keycloak: Keycloak | undefined;
+  private readonly platformId = inject(PLATFORM_ID);
   private readonly _isLoading = signal(true);
   private readonly _isAuthenticated = signal(false);
   private readonly _user = signal<User | null>(null);
@@ -31,7 +33,11 @@ export class AuthService {
   readonly isProfessor = computed(() => this.hasRole('professor'));
   readonly isEmployee = computed(() => this.hasRole('employee'));
 
-  private getKeycloak(): Keycloak {
+  constructor() {
+    this.init();
+  }
+
+  private get keycloakInstance(): Keycloak {
     if (!this.keycloak) {
       this.keycloak = new Keycloak({
         url: environment.keycloak.url,
@@ -42,11 +48,15 @@ export class AuthService {
     return this.keycloak;
   }
 
-  async init(): Promise<boolean> {
-    this._isLoading.set(true);
+  private async init(): Promise<void> {
+    // Skip on server-side rendering
+    if (isPlatformServer(this.platformId)) {
+      this._isLoading.set(false);
+      return;
+    }
 
     try {
-      const authenticated = await this.getKeycloak().init({
+      const authenticated = await this.keycloakInstance.init({
         onLoad: 'check-sso',
         silentCheckSsoRedirectUri: window.location.origin + '/silent-check-sso.html',
         silentCheckSsoFallback: true,
@@ -60,19 +70,18 @@ export class AuthService {
       }
 
       this._isAuthenticated.set(authenticated);
-      return authenticated;
     } catch (error) {
       console.error('Keycloak initialization failed:', error);
       this._isAuthenticated.set(false);
-      return false;
     } finally {
       this._isLoading.set(false);
     }
   }
 
-  async login(redirectUri?: string): Promise<void> {
-    await this.getKeycloak().login({
-      redirectUri: redirectUri ?? window.location.origin + '/positions',
+  async login(): Promise<void> {
+    await this.keycloakInstance.login({
+      redirectUri: window.location.origin,
+      action: 'webauthn-register-passwordless:skip_if_exists',
     });
   }
 

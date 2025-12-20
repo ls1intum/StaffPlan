@@ -2,7 +2,7 @@ import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
 import { AuthService } from './auth.service';
 
-export const authGuard: CanActivateFn = async (_route, state) => {
+export const authGuard: CanActivateFn = async () => {
   const authService = inject(AuthService);
   const router = inject(Router);
 
@@ -16,8 +16,8 @@ export const authGuard: CanActivateFn = async (_route, state) => {
     return true;
   }
 
-  // Not authenticated - redirect to login
-  await authService.login(window.location.origin + state.url);
+  // Not authenticated - redirect to login (will return to root, then redirect to /positions)
+  await authService.login();
   return false;
 };
 
