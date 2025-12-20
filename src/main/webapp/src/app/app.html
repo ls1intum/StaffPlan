@@ -5,23 +5,23 @@
     </a>
   </div>
   <nav class="nav">
-    @if (authService.isLoading()) {
+    @if (securityStore.isLoading()) {
       <span>Loading...</span>
-    } @else if (authService.isAuthenticated()) {
+    } @else if (securityStore.user()) {
       <a routerLink="/positions" routerLinkActive="active" class="nav-link">Positions</a>
       <span class="user-info">
-        {{ authService.user()?.firstName }} {{ authService.user()?.lastName }}
-        @if (authService.user()?.roles?.length) {
+        {{ securityStore.user()?.firstName }} {{ securityStore.user()?.lastName }}
+        @if (securityStore.user()?.roles?.length) {
           <span class="role-badges">
-            @for (role of authService.user()?.roles; track role) {
+            @for (role of securityStore.user()?.roles; track role) {
               <span class="role-badge">{{ role }}</span>
             }
           </span>
         }
       </span>
-      <button class="btn btn-outline" (click)="authService.logout()">Logout</button>
+      <button class="btn btn-outline" (click)="securityStore.signOut()">Logout</button>
     } @else {
-      <button class="btn btn-primary" (click)="authService.login()">Login</button>
+      <button class="btn btn-primary" (click)="securityStore.signIn()">Login</button>
     }
   </nav>
 </header>

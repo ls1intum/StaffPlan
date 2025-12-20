@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
 import { Button } from 'primeng/button';
 import { Card } from 'primeng/card';
-import { AuthService } from '../../core/auth';
+import { SecurityStore } from '../../core/security';
 import { PositionService } from './position.service';
 import { PositionUploadComponent } from './upload/position-upload.component';
 import { PositionGanttComponent } from './gantt/position-gantt.component';
@@ -65,11 +65,11 @@ import { Position } from './position.model';
 })
 export class PositionsPageComponent implements OnInit {
   private readonly positionService = inject(PositionService);
-  private readonly authService = inject(AuthService);
+  private readonly securityStore = inject(SecurityStore);
 
   readonly positions = signal<Position[]>([]);
   readonly loading = signal(false);
-  readonly canManage = this.authService.isJobManager;
+  readonly canManage = this.securityStore.isJobManager;
 
   ngOnInit(): void {
     this.loadPositions();

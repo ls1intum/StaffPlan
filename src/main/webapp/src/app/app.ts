@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
-import { AuthService } from './core/auth';
+import { SecurityStore } from './core/security';
 
 @Component({
   selector: 'app-root',
@@ -10,5 +10,5 @@ import { AuthService } from './core/auth';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class App {
-  protected readonly authService = inject(AuthService);
+  protected readonly securityStore = inject(SecurityStore);
 }

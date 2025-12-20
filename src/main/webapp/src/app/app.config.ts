@@ -5,7 +5,7 @@ import { providePrimeNG } from 'primeng/config';
 import Aura from '@primeuix/themes/aura';
 
 import { routes } from './app.routes';
-import { authInterceptor } from './core/auth';
+import { authInterceptor } from './core/security';
 
 export const appConfig: ApplicationConfig = {
   providers: [

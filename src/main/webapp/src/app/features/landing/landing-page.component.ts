@@ -1,13 +1,13 @@
 import { ChangeDetectionStrategy, Component, inject, effect } from '@angular/core';
 import { Router } from '@angular/router';
-import { AuthService } from '../../core/auth';
+import { SecurityStore } from '../../core/security';
 
 @Component({
   selector: 'app-landing-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="landing-container">
-      @if (authService.isLoading()) {
+      @if (securityStore.isLoading()) {
         <p>Loading...</p>
       } @else {
         <h2>Welcome to StaffPlan</h2>
@@ -39,13 +39,13 @@ import { AuthService } from '../../core/auth';
   `,
 })
 export class LandingPageComponent {
-  protected readonly authService = inject(AuthService);
+  protected readonly securityStore = inject(SecurityStore);
   private readonly router = inject(Router);
 
   constructor() {
     // Redirect authenticated users to positions once loading completes
     effect(() => {
-      if (!this.authService.isLoading() && this.authService.isAuthenticated()) {
+      if (!this.securityStore.isLoading() && this.securityStore.user()) {
         this.router.navigate(['/positions']);
       }
     });
