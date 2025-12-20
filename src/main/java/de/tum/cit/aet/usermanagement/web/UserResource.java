@@ -20,6 +20,8 @@ public class UserResource {
 
     /**
      * Returns the current authenticated user with their roles.
+     *
+     * @return the current user DTO
      */
     @GetMapping("/me")
     public ResponseEntity<UserDTO> getCurrentUser() {
@@ -28,6 +30,8 @@ public class UserResource {
 
     /**
      * Returns all users. Admin only.
+     *
+     * @return list of all users
      */
     @GetMapping
     public ResponseEntity<List<UserDTO>> getAllUsers() {
@@ -39,6 +43,10 @@ public class UserResource {
 
     /**
      * Updates the roles for a specific user. Admin only.
+     *
+     * @param id the user ID
+     * @param roles the new list of roles
+     * @return the updated user DTO
      */
     @PutMapping("/{id}/roles")
     public ResponseEntity<UserDTO> updateUserRoles(

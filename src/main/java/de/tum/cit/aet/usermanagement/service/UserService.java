@@ -24,6 +24,8 @@ public class UserService {
 
     /**
      * Returns all users with their roles.
+     *
+     * @return list of all users with their roles
      */
     @Transactional(readOnly = true)
     public List<UserDTO> getAllUsers() {
