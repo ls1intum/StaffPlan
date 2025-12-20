@@ -22,7 +22,7 @@ configs:
           }
 
           location /api/ {
-              proxy_pass http://server:8080/api/;
+              proxy_pass http://server:8080/;
               proxy_set_header Host $$host;
               proxy_set_header X-Real-IP $$remote_addr;
               proxy_set_header X-Forwarded-For $$proxy_add_x_forwarded_for;
@@ -108,6 +108,7 @@ services:
       STAFFPLAN_KEYCLOAK_CLIENT_ID: ${KEYCLOAK_CLIENT_ID}
       STAFFPLAN_CLIENT_HOST: ${CLIENT_HOST}
       STAFFPLAN_CORS_ALLOWED_ORIGINS: ${CLIENT_HOST}
+      STAFFPLAN_INITIAL_ADMIN: ${STAFFPLAN_INITIAL_ADMIN:-}
     networks:
       - staffplan-network
     healthcheck:

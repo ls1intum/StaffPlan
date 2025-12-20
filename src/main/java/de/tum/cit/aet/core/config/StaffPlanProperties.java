@@ -11,6 +11,7 @@ public class StaffPlanProperties {
 
     private String user;
     private String password;
+    private String initialAdmin;
     private Cors cors = new Cors();
 
     public String getUser() {
@@ -27,6 +28,14 @@ public class StaffPlanProperties {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public String getInitialAdmin() {
+        return initialAdmin;
+    }
+
+    public void setInitialAdmin(String initialAdmin) {
+        this.initialAdmin = initialAdmin;
     }
 
     public Cors getCors() {

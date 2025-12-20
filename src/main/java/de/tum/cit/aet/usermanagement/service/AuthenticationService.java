@@ -1,5 +1,6 @@
 package de.tum.cit.aet.usermanagement.service;
 
+import de.tum.cit.aet.core.config.StaffPlanProperties;
 import de.tum.cit.aet.usermanagement.domain.User;
 import de.tum.cit.aet.usermanagement.domain.UserGroup;
 import de.tum.cit.aet.usermanagement.domain.key.UserGroupId;
@@ -12,7 +13,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -20,11 +20,13 @@ import java.util.Set;
 public class AuthenticationService {
     private final UserRepository userRepository;
     private final UserGroupRepository userGroupRepository;
+    private final StaffPlanProperties staffPlanProperties;
 
     @Autowired
-    public AuthenticationService(UserRepository userRepository, UserGroupRepository userGroupRepository) {
+    public AuthenticationService(UserRepository userRepository, UserGroupRepository userGroupRepository, StaffPlanProperties staffPlanProperties) {
         this.userRepository = userRepository;
         this.userGroupRepository = userGroupRepository;
+        this.staffPlanProperties = staffPlanProperties;
     }
 
     @Transactional
@@ -40,10 +42,11 @@ public class AuthenticationService {
     }
 
     /**
-     * Updates or creates the authenticated user from JWT token data.
+     * Creates the authenticated user from JWT token data on first login.
+     * Updates basic profile info but preserves existing roles.
      *
      * @param jwt the JWT authentication token
-     * @return the updated or created user
+     * @return the created or existing user
      */
     @Transactional
     public User updateAuthenticatedUser(JwtAuthenticationToken jwt) {
@@ -54,9 +57,7 @@ public class AuthenticationService {
         String firstName = (String) attributes.get("given_name");
         String lastName = (String) attributes.get("family_name");
 
-        List<String> groups = jwt.getAuthorities().stream()
-                .filter(authority -> authority.getAuthority().startsWith("ROLE_"))
-                .map(authority -> authority.getAuthority().replace("ROLE_", "")).toList();
+        boolean isNewUser = userRepository.findByUniversityId(universityId).isEmpty();
 
         User user = userRepository.findByUniversityId(universityId).orElseGet(() -> {
             User newUser = new User();
@@ -84,26 +85,25 @@ public class AuthenticationService {
 
         user = userRepository.save(user);
 
-        userGroupRepository.deleteByUserId(user.getId());
+        // Only assign initial admin role for new users
+        if (isNewUser) {
+            String initialAdmin = staffPlanProperties.getInitialAdmin();
+            if (initialAdmin != null && !initialAdmin.isEmpty() && universityId.equals(initialAdmin)) {
+                UserGroup adminGroup = new UserGroup();
+                UserGroupId adminGroupId = new UserGroupId();
+                adminGroupId.setUserId(user.getId());
+                adminGroupId.setRole("admin");
+                adminGroup.setUser(user);
+                adminGroup.setId(adminGroupId);
+                userGroupRepository.save(adminGroup);
 
-        Set<UserGroup> userGroups = new HashSet<>();
-
-        for (String group : groups) {
-            UserGroup entity = new UserGroup();
-            UserGroupId entityId = new UserGroupId();
-
-            entityId.setUserId(user.getId());
-            entityId.setRole(group);
-
-            entity.setUser(user);
-            entity.setId(entityId);
-
-            userGroups.add(userGroupRepository.save(entity));
+                Set<UserGroup> groups = new HashSet<>();
+                groups.add(adminGroup);
+                user.setGroups(groups);
+            }
         }
 
-        user.setGroups(userGroups);
-
-        return userRepository.save(user);
+        return user;
     }
 
     private String getUniversityId(JwtAuthenticationToken jwt) {

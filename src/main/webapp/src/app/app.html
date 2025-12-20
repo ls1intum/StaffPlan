@@ -9,6 +9,9 @@
       <span>Loading...</span>
     } @else if (securityStore.user()) {
       <a routerLink="/positions" routerLinkActive="active" class="nav-link">Positions</a>
+      @if (securityStore.isAdmin()) {
+        <a routerLink="/admin/users" routerLinkActive="active" class="nav-link">Users</a>
+      }
       <span class="user-info">
         {{ securityStore.user()?.firstName }} {{ securityStore.user()?.lastName }}
       </span>

@@ -1,11 +1,13 @@
 import { inject, Injectable, PLATFORM_ID, signal, computed } from '@angular/core';
 import { isPlatformServer } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
+import { firstValueFrom } from 'rxjs';
 import { KeycloakService } from './keycloak.service';
 import { environment } from '../../../environments/environment';
 
 export interface User {
   id: string;
-  username: string;
+  universityId: string;
   email: string;
   firstName: string;
   lastName: string;
@@ -15,6 +17,7 @@ export interface User {
 @Injectable({ providedIn: 'root' })
 export class SecurityStore {
   private readonly keycloakService = inject(KeycloakService);
+  private readonly http = inject(HttpClient);
 
   isLoading = signal(false);
   user = signal<User | undefined>(undefined);
@@ -39,7 +42,7 @@ export class SecurityStore {
     const isLoggedIn = await this.keycloakService.init();
 
     if (isLoggedIn) {
-      this.updateUserFromToken();
+      await this.fetchUserFromBackend();
     }
     this.isLoading.set(false);
   }
@@ -61,27 +64,15 @@ export class SecurityStore {
     return this.keycloakService.bearer;
   }
 
-  private updateUserFromToken(): void {
-    const keycloak = this.keycloakService.keycloak;
-    if (!keycloak?.tokenParsed) {
-      return;
+  private async fetchUserFromBackend(): Promise<void> {
+    try {
+      const user = await firstValueFrom(
+        this.http.get<User>(`${environment.apiUrl}/v2/users/me`)
+      );
+      this.user.set(user);
+    } catch (error) {
+      console.error('Failed to fetch user from backend:', error);
+      this.user.set(undefined);
     }
-
-    const tokenParsed = keycloak.tokenParsed as Record<string, unknown>;
-    const resourceAccess = tokenParsed['resource_access'] as
-      | Record<string, { roles: string[] }>
-      | undefined;
-    const clientRoles = resourceAccess?.[environment.keycloak.clientId]?.roles ?? [];
-    const realmRoles =
-      (tokenParsed['realm_access'] as { roles: string[] } | undefined)?.roles ?? [];
-
-    this.user.set({
-      id: tokenParsed['sub'] as string,
-      username: tokenParsed['preferred_username'] as string,
-      email: tokenParsed['email'] as string,
-      firstName: tokenParsed['given_name'] as string,
-      lastName: tokenParsed['family_name'] as string,
-      roles: [...new Set([...clientRoles, ...realmRoles])],
-    });
   }
 }
