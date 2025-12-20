@@ -11,13 +11,6 @@
       <a routerLink="/positions" routerLinkActive="active" class="nav-link">Positions</a>
       <span class="user-info">
         {{ securityStore.user()?.firstName }} {{ securityStore.user()?.lastName }}
-        @if (securityStore.user()?.roles?.length) {
-          <span class="role-badges">
-            @for (role of securityStore.user()?.roles; track role) {
-              <span class="role-badge">{{ role }}</span>
-            }
-          </span>
-        }
       </span>
       <button class="btn btn-outline" (click)="securityStore.signOut()">Logout</button>
     } @else {
