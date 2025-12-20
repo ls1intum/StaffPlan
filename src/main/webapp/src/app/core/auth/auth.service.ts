@@ -35,13 +35,14 @@ export class AuthService {
   readonly isEmployee = computed(() => this.hasRole('employee'));
 
   /**
-   * Check if URL contains OAuth callback parameters
+   * Check if URL contains OAuth callback parameters (supports both standard and implicit flow)
    */
   private hasOAuthCallback(): boolean {
     const hash = window.location.hash;
     const search = window.location.search;
     return (
       hash.includes('code=') ||
+      hash.includes('access_token=') ||
       hash.includes('error=') ||
       search.includes('code=') ||
       search.includes('error=')
@@ -66,8 +67,31 @@ export class AuthService {
     return this.initPromise;
   }
 
+  /**
+   * Detect OAuth flow based on callback parameters.
+   * Standard flow: code in query string
+   * Implicit flow: access_token in hash
+   * Hybrid/misconfigured: code in hash (try implicit)
+   */
+  private detectFlow(): 'standard' | 'implicit' {
+    const hash = window.location.hash;
+    const search = window.location.search;
+
+    // Standard flow: code in query string
+    if (search.includes('code=')) {
+      return 'standard';
+    }
+    // Implicit flow or hybrid: tokens or code in hash
+    if (hash.includes('access_token=') || hash.includes('code=')) {
+      return 'implicit';
+    }
+    // Default to standard (with PKCE) for new logins
+    return 'standard';
+  }
+
   private async doInit(): Promise<boolean> {
     const hadCallback = this.hasOAuthCallback();
+    const flow = this.detectFlow();
 
     const KeycloakClass = (await import('keycloak-js')).default;
     this.keycloak = new KeycloakClass({
@@ -77,9 +101,12 @@ export class AuthService {
     });
 
     try {
-      const authenticated = await this.keycloak.init({
-        pkceMethod: 'S256',
-      });
+      const initOptions: { flow: 'standard' | 'implicit'; pkceMethod?: 'S256' } = { flow };
+      if (flow === 'standard') {
+        initOptions.pkceMethod = 'S256';
+      }
+
+      const authenticated = await this.keycloak.init(initOptions);
 
       // Always clean URL after processing callback to prevent loops
       if (hadCallback) {

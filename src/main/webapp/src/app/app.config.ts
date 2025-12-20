@@ -21,6 +21,7 @@ function initializeKeycloakIfCallback(authService: AuthService) {
     const search = window.location.search;
     const hasCallback =
       hash.includes('code=') ||
+      hash.includes('access_token=') ||
       hash.includes('error=') ||
       search.includes('code=') ||
       search.includes('error=');
