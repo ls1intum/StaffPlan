@@ -19,6 +19,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
@@ -156,9 +157,7 @@ public class PositionService {
 
     private int[] mapColumnIndices(String[] headers) {
         int[] indices = new int[21];
-        for (int i = 0; i < indices.length; i++) {
-            indices[i] = -1;
-        }
+        Arrays.fill(indices, -1);
 
         for (int i = 0; i < headers.length; i++) {
             String header = headers[i].trim().toLowerCase()

@@ -24,12 +24,21 @@ import { Position } from './position.model';
           <div class="card-header">
             <h2>Position Overview</h2>
             @if (canManage()) {
-              <p-button
-                label="Refresh"
-                icon="pi pi-refresh"
-                [outlined]="true"
-                (onClick)="loadPositions()"
-              />
+              <div class="header-actions">
+                <p-button
+                  label="Refresh"
+                  icon="pi pi-refresh"
+                  [outlined]="true"
+                  (onClick)="loadPositions()"
+                />
+                <p-button
+                  label="Clear All"
+                  icon="pi pi-trash"
+                  severity="danger"
+                  [outlined]="true"
+                  (onClick)="clearPositions()"
+                />
+              </div>
             }
           </div>
         </ng-template>
@@ -60,6 +69,11 @@ import { Position } from './position.model';
       h2 {
         margin: 0;
       }
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 0.5rem;
     }
 
     .loading {
@@ -93,6 +107,17 @@ export class PositionsPageComponent implements OnInit {
       },
       error: () => {
         this.loading.set(false);
+      },
+    });
+  }
+
+  clearPositions(): void {
+    if (!confirm('Are you sure you want to delete all positions?')) {
+      return;
+    }
+    this.positionService.deletePositions().subscribe({
+      next: () => {
+        this.positions.set([]);
       },
     });
   }
