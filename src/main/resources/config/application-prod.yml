@@ -4,6 +4,7 @@ spring:
       resourceserver:
         jwt:
           issuer-uri: ${SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI:http://keycloak.ase.in.tum.de/realms/staffplan}
+          jwk-set-uri: ${SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_SET_URI:http://keycloak.ase.in.tum.de/realms/staffplan/protocol/openid-connect/certs}
 
 staffplan:
   keycloak:
