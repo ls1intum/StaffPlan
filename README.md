@@ -5,7 +5,7 @@ Strategic Staff and Budget Planning - A web application built with Spring Boot, 
 ## Prerequisites
 
 - **Java 25** (required for Spring Boot 4.0)
-- **Node.js 24.x** and **npm 11.x** (for Angular frontend)
+- **Node.js 24.x** and **npm 11.x** (for Angular client)
 - **Docker** and **Docker Compose** (for running services locally)
 
 ## Quick Start (Docker)
