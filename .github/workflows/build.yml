@@ -1,4 +1,4 @@
-name: Build and Push Docker Image
+name: Build and Deploy
 
 on:
   pull_request:
@@ -29,4 +29,28 @@ jobs:
     with:
       image-name: ghcr.io/ls1intum/staffplan-${{ matrix.service }}
       docker-file: docker/${{ matrix.service }}.Dockerfile
+    secrets: inherit
+
+  deploy-staging:
+    needs: build
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    uses: ls1intum/.github/.github/workflows/deploy-docker-compose.yml@main
+    with:
+      environment: staging
+      docker-compose-file: './docker/docker-compose-prod.yml'
+      main-image-name: ghcr.io/ls1intum/staffplan-server
+      image-tag: latest
+      deployment-base-path: '/opt/staffplan'
+    secrets: inherit
+
+  deploy-production:
+    needs: deploy-staging
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    uses: ls1intum/.github/.github/workflows/deploy-docker-compose.yml@main
+    with:
+      environment: production
+      docker-compose-file: './docker/docker-compose-prod.yml'
+      main-image-name: ghcr.io/ls1intum/staffplan-server
+      image-tag: latest
+      deployment-base-path: '/opt/staffplan'
     secrets: inherit

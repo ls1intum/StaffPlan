@@ -136,7 +136,7 @@ type ZoomLevel = 3 | 6 | 12 | 24 | 36 | 60;
       }
 
       .filter-select-wide {
-        width: 7rem;
+        width: 10.5rem;
       }
 
       .p-checkbox {

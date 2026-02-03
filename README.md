@@ -147,11 +147,16 @@ npm run build
 npm test
 ```
 
-## API Documentation
+## Deployment
 
-When running the server, OpenAPI documentation is available at:
-- Swagger UI: http://localhost:8080/swagger-ui.html
-- OpenAPI spec: http://localhost:8080/v3/api-docs
+Changes pushed to the `main` branch are automatically deployed:
+
+| Environment | URL | Trigger |
+|-------------|-----|---------|
+| **Staging** | https://staffplan-dev.aet.cit.tum.de | Push to `main` |
+| **Production** | https://staffplan.aet.cit.tum.de | Push to `main` |
+
+The CI/CD pipeline (GitHub Actions) builds Docker images and deploys them automatically.
 
 ## Keycloak Administration
 
