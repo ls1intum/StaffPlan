@@ -1,0 +1,158 @@
+<div class="gantt-container">
+  <!-- Filter Bar -->
+  <div class="filter-bar">
+    <div class="filter-item">
+      <label for="search">Search</label>
+      <input
+        id="search"
+        type="text"
+        pInputText
+        placeholder="Search positions..."
+        [ngModel]="searchTerm()"
+        (ngModelChange)="searchTerm.set($event)"
+      />
+    </div>
+    <div class="filter-item">
+      <label for="grade">Grade</label>
+      <p-select
+        id="grade"
+        [options]="gradeOptions()"
+        [ngModel]="filterGrade()"
+        (ngModelChange)="filterGrade.set($event)"
+        placeholder="All Grades"
+        [showClear]="true"
+      />
+    </div>
+    <div class="filter-item checkbox-item">
+      <p-checkbox
+        inputId="unfilled"
+        [ngModel]="showOnlyUnfilled()"
+        (ngModelChange)="showOnlyUnfilled.set($event)"
+        [binary]="true"
+      />
+      <label for="unfilled">Show only unfilled positions</label>
+    </div>
+    <div class="filter-stats">
+      {{ filteredRows().length }} of {{ ganttRows().length }} positions
+      @if (totalWhiteSpots() > 0) {
+        <span class="white-spot-count">
+          ({{ totalWhiteSpots() }} with gaps)
+        </span>
+      }
+    </div>
+  </div>
+
+  <!-- Gantt Header -->
+  <div class="gantt-header">
+    <div class="gantt-label-header">
+      <span class="header-grade">Grade</span>
+      <span class="header-desc">Position</span>
+      <span class="header-fill">Fill %</span>
+    </div>
+    <div class="gantt-timeline-header">
+      @for (month of months(); track month.key) {
+        <div class="gantt-month" [style.width.%]="month.widthPercent">
+          {{ month.label }}
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- Today Marker positioned over body -->
+  <div class="gantt-body-wrapper">
+    @if (todayMarkerPosition() !== null) {
+      <div
+        class="today-marker"
+        [style.left]="'calc(250px + ' + todayMarkerPosition() + '%)'"
+      >
+        <span class="today-label">Today</span>
+      </div>
+    }
+
+    <div class="gantt-body">
+      @for (row of filteredRows(); track row.position.objectId) {
+        <div class="gantt-row" [class.has-gaps]="row.hasGaps">
+          <div class="gantt-label">
+            <span class="grade-badge" [class]="row.gradeClass">
+              {{ row.position.baseGrade || 'N/A' }}
+            </span>
+            <span
+              class="position-desc"
+              [title]="row.position.objectDescription ?? ''"
+            >
+              {{ row.position.objectDescription || row.position.objectCode || 'Unknown' }}
+            </span>
+            <span
+              class="fill-percent"
+              [class.under-filled]="row.totalCurrentFill < 100"
+              [class.over-filled]="row.totalCurrentFill > 100"
+            >
+              {{ row.totalCurrentFill | number: '1.0-0' }}%
+            </span>
+          </div>
+          <div class="gantt-timeline">
+            <!-- 4 Band rows -->
+            <div class="band-container">
+              @for (bandLevel of bandLevels; track bandLevel) {
+                <div class="band-row" [attr.data-band]="bandLevel">
+                  @for (segment of row.bands[bandLevel]; track $index) {
+                    <div
+                      class="band-segment"
+                      [class.filled]="segment.isFilled"
+                      [class.gap]="!segment.isFilled"
+                      [style.left.%]="segment.startPercent"
+                      [style.width.%]="segment.widthPercent"
+                      pTooltip
+                      [tooltipOptions]="{
+                        tooltipLabel: segment.tooltip,
+                        tooltipPosition: 'top',
+                      }"
+                    >
+                      @if (segment.isFilled && bandLevel === 0 && segment.assignments.length > 0) {
+                        <span class="segment-label">
+                          {{ segment.assignments[0].personnelNumber }}
+                        </span>
+                      }
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+      }
+
+      @if (filteredRows().length === 0) {
+        <div class="no-data">
+          @if (positions().length === 0) {
+            No positions to display. Upload a CSV file to get started.
+          } @else {
+            No positions match your filter criteria.
+          }
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- Legend -->
+  <div class="gantt-legend">
+    <div class="legend-section">
+      <span class="legend-title">Fill Level:</span>
+      <span class="legend-item">
+        <span class="legend-color filled"></span> Filled
+      </span>
+      <span class="legend-item">
+        <span class="legend-color gap"></span> White Spot (Gap)
+      </span>
+    </div>
+    <div class="legend-section">
+      <span class="legend-title">Bands:</span>
+      <span class="legend-item">100% (top) → 25% (bottom)</span>
+    </div>
+    <div class="legend-section">
+      <span class="legend-item">
+        <span class="today-line"></span> Today
+      </span>
+    </div>
+  </div>
+</div>

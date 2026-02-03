@@ -27,3 +27,43 @@ export interface ImportResult {
   message: string;
   count: number;
 }
+
+export interface EmployeeAssignment {
+  personnelNumber: string;
+  percentage: number;
+  startDate: Date;
+  endDate: Date;
+  originalPosition: Position;
+}
+
+export interface GroupedPosition {
+  objectId: string;
+  objectCode: string | null;
+  objectDescription: string | null;
+  baseGrade: string | null;
+  positionValue: number;
+  assignments: EmployeeAssignment[];
+  dateRange: { start: Date; end: Date };
+}
+
+export interface TimeSlice {
+  start: Date;
+  end: Date;
+  totalFillPercentage: number;
+  assignments: EmployeeAssignment[];
+}
+
+export interface GanttSegment {
+  startPercent: number;
+  widthPercent: number;
+  fillPercentage: number;
+  assignments: EmployeeAssignment[];
+  isGap: boolean;
+}
+
+export interface GanttBandRow {
+  position: GroupedPosition;
+  segments: GanttSegment[];
+  totalCurrentFill: number;
+  hasGaps: boolean;
+}
