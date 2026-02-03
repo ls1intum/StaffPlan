@@ -40,7 +40,18 @@ import { Position } from './position.model';
     </div>
   `,
   styles: `
+    :host {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-height: 0;
+    }
+
     .positions-page {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-height: 0;
       padding: 0;
     }
 

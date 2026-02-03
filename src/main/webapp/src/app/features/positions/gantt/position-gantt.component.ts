@@ -66,7 +66,18 @@ type ZoomLevel = 3 | 6 | 12 | 24 | 36 | 60;
   ],
   templateUrl: './position-gantt.component.html',
   styles: `
+    :host {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-height: 0;
+    }
+
     .gantt-container {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-height: 0;
       border: 1px solid var(--p-surface-300);
       border-radius: 8px;
       overflow: hidden;
@@ -332,10 +343,15 @@ type ZoomLevel = 3 | 6 | 12 | 24 | 36 | 60;
     /* Body */
     .gantt-body-wrapper {
       position: relative;
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
     }
 
     .gantt-viewport {
-      height: calc(100vh - 240px);
+      flex: 1;
+      min-height: 0;
     }
 
     /* Today Marker */

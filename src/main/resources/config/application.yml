@@ -58,6 +58,8 @@ management:
       show-details: when-authorized
 
 staffplan:
+  keycloak:
+    client-id: staffplan-client
   client:
     host: http://localhost:4200
   cors:

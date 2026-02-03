@@ -1,6 +1,21 @@
 /* PrimeIcons */
 @import 'primeicons/primeicons.css';
 
+/* Reset */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
 /* Global styles */
 
 /* Compact dropdown panel for PrimeNG 21+ Select */
