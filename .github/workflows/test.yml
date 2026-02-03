@@ -58,7 +58,7 @@ jobs:
       - name: Java Code Style
         run: ./gradlew spotlessCheck
       - name: Java Documentation
-        run: ./gradlew checkstyleMain -x webapp
+        run: ./gradlew checkstyleMain
         if: success() || failure()
 
   client-style:
