@@ -8,18 +8,24 @@ public interface MatchingRule {
 
     /**
      * Returns the name of this rule for display purposes.
+     *
+     * @return the human-readable rule name
      */
     String getName();
 
     /**
      * Returns the priority of this rule (lower = higher priority).
      * Used for sorting when displaying rule evaluations.
+     *
+     * @return the rule priority
      */
     int getPriority();
 
     /**
      * Returns the weight of this rule in the overall score (0.0 - 1.0).
      * All weights should sum to 1.0 across all active rules.
+     *
+     * @return the rule weight
      */
     double getWeight();
 

@@ -24,6 +24,8 @@ public interface GradeValueRepository extends JpaRepository<GradeValue, UUID> {
 
     /**
      * Returns all distinct base grades currently used in positions.
+     *
+     * @return the distinct base grades in use
      */
     @Query("SELECT DISTINCT p.baseGrade FROM Position p WHERE p.baseGrade IS NOT NULL")
     List<String> findGradesInUse();

@@ -22,6 +22,8 @@ public class GradeValueService {
 
     /**
      * Returns all grade values ordered by sort order.
+     *
+     * @return ordered grade values with usage flags
      */
     @Transactional(readOnly = true)
     public List<GradeValueDTO> getAllGradeValues() {
@@ -34,6 +36,8 @@ public class GradeValueService {
 
     /**
      * Returns only active grade values.
+     *
+     * @return active grade values ordered by sort order
      */
     @Transactional(readOnly = true)
     public List<GradeValueDTO> getActiveGradeValues() {
@@ -45,6 +49,9 @@ public class GradeValueService {
 
     /**
      * Returns a grade value by ID.
+     *
+     * @param id the grade value ID
+     * @return the grade value
      */
     @Transactional(readOnly = true)
     public GradeValueDTO getGradeValue(UUID id) {
@@ -56,6 +63,9 @@ public class GradeValueService {
 
     /**
      * Returns a grade value by grade code.
+     *
+     * @param gradeCode the grade code to look up
+     * @return the grade value
      */
     @Transactional(readOnly = true)
     public GradeValueDTO getGradeValueByCode(String gradeCode) {
@@ -66,6 +76,8 @@ public class GradeValueService {
 
     /**
      * Returns grades that are currently used in positions.
+     *
+     * @return distinct base grades in use
      */
     @Transactional(readOnly = true)
     public List<String> getGradesInUse() {
@@ -74,6 +86,9 @@ public class GradeValueService {
 
     /**
      * Creates a new grade value.
+     *
+     * @param dto the grade value payload
+     * @return the created grade value
      */
     @Transactional
     public GradeValueDTO createGradeValue(GradeValueDTO dto) {
@@ -90,6 +105,10 @@ public class GradeValueService {
 
     /**
      * Updates an existing grade value.
+     *
+     * @param id  the grade value ID
+     * @param dto the grade value payload
+     * @return the updated grade value
      */
     @Transactional
     public GradeValueDTO updateGradeValue(UUID id, GradeValueDTO dto) {
@@ -110,6 +129,8 @@ public class GradeValueService {
 
     /**
      * Deletes a grade value.
+     *
+     * @param id the grade value ID
      */
     @Transactional
     public void deleteGradeValue(UUID id) {

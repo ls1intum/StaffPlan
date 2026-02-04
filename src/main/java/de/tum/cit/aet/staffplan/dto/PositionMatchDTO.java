@@ -39,9 +39,15 @@ public record PositionMatchDTO(
      * Determines match quality from overall score.
      */
     public static MatchQuality qualityFromScore(double score) {
-        if (score >= 80) return MatchQuality.EXCELLENT;
-        if (score >= 60) return MatchQuality.GOOD;
-        if (score >= 40) return MatchQuality.FAIR;
+        if (score >= 80) {
+            return MatchQuality.EXCELLENT;
+        }
+        if (score >= 60) {
+            return MatchQuality.GOOD;
+        }
+        if (score >= 40) {
+            return MatchQuality.FAIR;
+        }
         return MatchQuality.POOR;
     }
 }

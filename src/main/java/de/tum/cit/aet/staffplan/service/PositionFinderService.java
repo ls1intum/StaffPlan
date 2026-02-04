@@ -30,6 +30,9 @@ public class PositionFinderService {
 
     /**
      * Finds positions matching the given criteria.
+     *
+     * @param request the position finder request
+     * @return matching positions with optional split suggestions
      */
     @Transactional(readOnly = true)
     public PositionFinderResponseDTO findPositions(PositionFinderRequestDTO request) {
@@ -359,7 +362,9 @@ public class PositionFinderService {
             BigDecimal excessA = a.totalAvailablePercentage().subtract(targetPercentage);
             BigDecimal excessB = b.totalAvailablePercentage().subtract(targetPercentage);
             int excessCompare = excessA.compareTo(excessB);
-            if (excessCompare != 0) return excessCompare;
+            if (excessCompare != 0) {
+                return excessCompare;
+            }
             // If same excess, prefer fewer splits
             return Integer.compare(a.splitCount(), b.splitCount());
         });
