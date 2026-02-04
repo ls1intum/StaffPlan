@@ -194,6 +194,7 @@ public class PositionFinderService {
                     position.getObjectCode(),
                     position.getObjectDescription(),
                     position.getTariffGroup(),  // Use tariffGroup for grade display
+                    position.getPositionRelevanceType(),
                     position.getPercentage(),
                     availablePercentage,
                     position.getStartDate(),
@@ -330,6 +331,7 @@ public class PositionFinderService {
                     position.getObjectCode(),
                     position.getObjectDescription(),
                     position.getTariffGroup(),
+                    position.getPositionRelevanceType(),
                     position.getPercentage(),
                     availablePercentage,
                     position.getStartDate(),
@@ -348,75 +350,62 @@ public class PositionFinderService {
         List<SplitSuggestionDTO> suggestions = new ArrayList<>();
         BigDecimal targetPercentage = BigDecimal.valueOf(fillPercentage);
 
-        // Find optimal combinations for each split size (2, 3, 4 positions)
-        for (int splitSize = 2; splitSize <= Math.min(4, partialMatches.size()); splitSize++) {
-            SplitSuggestionDTO best = findBestCombination(partialMatches, targetPercentage, splitSize);
-            if (best != null) {
-                suggestions.add(best);
-            }
-        }
+        // Find top combinations for each split size (2, 3, 4 positions)
+        // Return more options for 2-way splits (most practical), fewer for larger splits
+        suggestions.addAll(findTopCombinations(partialMatches, targetPercentage, 2, 5));
+        suggestions.addAll(findTopCombinations(partialMatches, targetPercentage, 3, 2));
+        suggestions.addAll(findTopCombinations(partialMatches, targetPercentage, 4, 1));
 
-        // Sort suggestions by excess percentage (prefer minimal over-allocation), then by split count
+        // Sort suggestions by split count first (prefer fewer splits), then by excess percentage
         suggestions.sort((a, b) -> {
-            // Calculate excess (how much over the target)
+            int splitCompare = Integer.compare(a.splitCount(), b.splitCount());
+            if (splitCompare != 0) {
+                return splitCompare;
+            }
+            // Within same split count, prefer minimal excess
             BigDecimal excessA = a.totalAvailablePercentage().subtract(targetPercentage);
             BigDecimal excessB = b.totalAvailablePercentage().subtract(targetPercentage);
-            int excessCompare = excessA.compareTo(excessB);
-            if (excessCompare != 0) {
-                return excessCompare;
-            }
-            // If same excess, prefer fewer splits
-            return Integer.compare(a.splitCount(), b.splitCount());
+            return excessA.compareTo(excessB);
         });
 
-        // Return top 5 suggestions
-        return suggestions.stream().limit(5).toList();
+        // Return top 8 suggestions
+        return suggestions.stream().limit(8).toList();
     }
 
     /**
-     * Finds the best combination of exactly n positions that meets the target percentage
-     * with minimal excess (over-allocation).
+     * Finds the top combinations of exactly n positions that meet the target percentage,
+     * sorted by minimal excess (over-allocation).
      */
-    private SplitSuggestionDTO findBestCombination(
+    private List<SplitSuggestionDTO> findTopCombinations(
             List<PositionMatchDTO> positions,
             BigDecimal targetPercentage,
-            int n
+            int n,
+            int maxResults
     ) {
         if (positions.size() < n) {
-            return null;
+            return List.of();
         }
-
-        SplitSuggestionDTO bestSuggestion = null;
-        BigDecimal bestExcess = null;
 
         // Generate all combinations of size n
         List<List<PositionMatchDTO>> combinations = generateCombinations(positions, n);
 
-        for (List<PositionMatchDTO> combo : combinations) {
-            BigDecimal totalAvailable = combo.stream()
-                    .map(PositionMatchDTO::availablePercentage)
-                    .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-            // Must meet the target
-            if (totalAvailable.compareTo(targetPercentage) < 0) {
-                continue;
-            }
-
-            BigDecimal excess = totalAvailable.subtract(targetPercentage);
-
-            // Keep the combination with minimal excess
-            if (bestExcess == null || excess.compareTo(bestExcess) < 0) {
-                bestExcess = excess;
-                bestSuggestion = SplitSuggestionDTO.fromMatches(new ArrayList<>(combo));
-            }
-
-            // Perfect match found, no need to continue
-            if (excess.compareTo(BigDecimal.ZERO) == 0) {
-                break;
-            }
-        }
-
-        return bestSuggestion;
+        // Filter and sort by excess
+        return combinations.stream()
+                .map(combo -> {
+                    BigDecimal totalAvailable = combo.stream()
+                            .map(PositionMatchDTO::availablePercentage)
+                            .reduce(BigDecimal.ZERO, BigDecimal::add);
+                    return new AbstractMap.SimpleEntry<>(combo, totalAvailable);
+                })
+                .filter(entry -> entry.getValue().compareTo(targetPercentage) >= 0)
+                .sorted((a, b) -> {
+                    BigDecimal excessA = a.getValue().subtract(targetPercentage);
+                    BigDecimal excessB = b.getValue().subtract(targetPercentage);
+                    return excessA.compareTo(excessB);
+                })
+                .limit(maxResults)
+                .map(entry -> SplitSuggestionDTO.fromMatches(new ArrayList<>(entry.getKey())))
+                .toList();
     }
 
     /**

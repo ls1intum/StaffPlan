@@ -14,6 +14,7 @@ public record PositionMatchDTO(
         String objectCode,
         String objectDescription,
         String positionGrade,
+        String positionRelevanceType,
         BigDecimal positionPercentage,
         BigDecimal availablePercentage,
         LocalDate positionStartDate,

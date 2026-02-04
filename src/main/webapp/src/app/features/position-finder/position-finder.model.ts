@@ -15,6 +15,7 @@ export interface PositionMatch {
   objectCode: string | null;
   objectDescription: string | null;
   positionGrade: string;
+  positionRelevanceType: string | null;
   positionPercentage: number | null;
   availablePercentage: number;
   positionStartDate: string | null;

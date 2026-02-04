@@ -153,7 +153,7 @@ import { GradeValue } from '../admin/grade-values/grade-value.model';
           @if (searchResult()!.matches.length > 0) {
             <p-table
               [value]="searchResult()!.matches"
-              [tableStyle]="{ 'min-width': '80rem' }"
+              [tableStyle]="{ 'min-width': '90rem' }"
               [rowHover]="true"
             >
               <ng-template #header>
@@ -161,6 +161,7 @@ import { GradeValue } from '../admin/grade-values/grade-value.model';
                   <th>Qualität</th>
                   <th>Stelle</th>
                   <th>Besoldung</th>
+                  <th>Relevanzart</th>
                   <th>Verfügbar</th>
                   <th>Budgeteffizienz</th>
                   <th>Monatl. Verlust</th>
@@ -192,6 +193,13 @@ import { GradeValue } from '../admin/grade-values/grade-value.model';
                     <span class="grade-badge">{{ match.positionGrade }}</span>
                     @if (match.positionPercentage) {
                       <span class="position-pct">{{ match.positionPercentage }}%</span>
+                    }
+                  </td>
+                  <td>
+                    @if (match.positionRelevanceType) {
+                      <span class="relevance-type">{{ match.positionRelevanceType }}</span>
+                    } @else {
+                      <span class="no-relevance">-</span>
                     }
                   </td>
                   <td>
@@ -286,6 +294,9 @@ import { GradeValue } from '../admin/grade-values/grade-value.model';
                       <div class="split-position">
                         <span class="split-pos-id">{{ pos.objectId }}</span>
                         <span class="split-pos-grade">{{ pos.positionGrade }}</span>
+                        @if (pos.positionRelevanceType) {
+                          <span class="split-pos-relevance">{{ pos.positionRelevanceType }}</span>
+                        }
                         <span class="split-pos-available"
                           >{{ pos.availablePercentage | number: '1.0-0' }}% verfügbar</span
                         >
@@ -426,6 +437,14 @@ import { GradeValue } from '../admin/grade-values/grade-value.model';
       color: var(--p-text-muted-color);
       font-size: 0.875rem;
       margin-left: 0.5rem;
+    }
+
+    .relevance-type {
+      font-size: 0.875rem;
+    }
+
+    .no-relevance {
+      color: var(--p-text-muted-color);
     }
 
     .assignments {
@@ -603,6 +622,11 @@ import { GradeValue } from '../admin/grade-values/grade-value.model';
         border-radius: 4px;
         font-size: 0.875rem;
         font-weight: 500;
+      }
+
+      .split-pos-relevance {
+        color: var(--p-text-muted-color);
+        font-size: 0.875rem;
       }
 
       .split-pos-available {
