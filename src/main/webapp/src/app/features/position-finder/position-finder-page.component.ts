@@ -134,15 +134,25 @@ import { GradeValue } from '../admin/grade-values/grade-value.model';
               <h3>Suchergebnisse</h3>
               <div class="results-summary">
                 <span class="summary-item">
-                  <strong>Mitarbeiterkosten:</strong>
-                  {{
-                    searchResult()!.employeeMonthlyCost | currency: 'EUR' : 'symbol' : '1.0-0'
-                  }}/Monat
+                  <strong>Zeitraum:</strong>
+                  {{ lastSearchStartDate() | date: 'dd.MM.yyyy' }} -
+                  {{ lastSearchEndDate() | date: 'dd.MM.yyyy' }}
                 </span>
                 <span class="summary-item">
                   <strong>Besoldungsgruppe:</strong> {{ searchResult()!.employeeGrade }} bei
                   {{ searchResult()!.fillPercentage }}%
                 </span>
+                <span class="summary-item">
+                  <strong>Mitarbeiterkosten:</strong>
+                  {{
+                    searchResult()!.employeeMonthlyCost | currency: 'EUR' : 'symbol' : '1.0-0'
+                  }}/Monat
+                </span>
+                @if (lastSearchRelevanceTypes().length > 0) {
+                  <span class="summary-item">
+                    <strong>Relevanzart:</strong> {{ lastSearchRelevanceTypes().join(', ') }}
+                  </span>
+                }
                 <span class="summary-item">
                   <strong>Treffer:</strong> {{ searchResult()!.totalMatchesFound }} Stellen gefunden
                 </span>
@@ -661,6 +671,9 @@ export class PositionFinderPageComponent {
   readonly relevanceTypes = signal<string[]>([]);
   readonly searching = signal(false);
   readonly searchResult = signal<PositionFinderResponse | null>(null);
+  readonly lastSearchStartDate = signal<Date | null>(null);
+  readonly lastSearchEndDate = signal<Date | null>(null);
+  readonly lastSearchRelevanceTypes = signal<string[]>([]);
 
   selectedGrade = '';
   fillPercentage = 50;
@@ -728,6 +741,11 @@ export class PositionFinderPageComponent {
 
     this.searching.set(true);
     this.searchResult.set(null);
+
+    // Store search parameters for display in results
+    this.lastSearchStartDate.set(this.startDate);
+    this.lastSearchEndDate.set(this.endDate);
+    this.lastSearchRelevanceTypes.set([...this.selectedRelevanceTypes]);
 
     const request = {
       startDate: this.formatDate(this.startDate),
