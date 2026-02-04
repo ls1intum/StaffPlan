@@ -16,6 +16,7 @@ import { Select } from 'primeng/select';
 import { Checkbox } from 'primeng/checkbox';
 import { Button } from 'primeng/button';
 import { Slider } from 'primeng/slider';
+import { DatePicker } from 'primeng/datepicker';
 import { Position, EmployeeAssignment, GroupedPosition, TimeSlice } from '../position.model';
 
 interface BandSegment {
@@ -63,6 +64,7 @@ type ZoomLevel = 3 | 6 | 12 | 24 | 36 | 60;
     Checkbox,
     Button,
     Slider,
+    DatePicker,
   ],
   templateUrl: './position-gantt.component.html',
   styles: `
@@ -168,6 +170,31 @@ type ZoomLevel = 3 | 6 | 12 | 24 | 36 | 60;
       .p-checkbox-box {
         width: 0.85rem;
         height: 0.85rem;
+      }
+    }
+
+    .filter-date-item {
+      flex-direction: row;
+      align-items: center;
+      gap: 0.25rem;
+      height: 1.5rem;
+
+      label {
+        font-size: 0.6rem;
+        color: var(--p-text-muted-color);
+        white-space: nowrap;
+      }
+    }
+
+    :host ::ng-deep .filter-date-item .p-datepicker {
+      font-size: 0.65rem;
+      height: 1.5rem;
+
+      input {
+        font-size: 0.65rem;
+        padding: 0.15rem 0.3rem;
+        width: 5.5rem;
+        height: 1.5rem;
       }
     }
 
@@ -650,6 +677,7 @@ export class PositionGanttComponent {
   readonly filterDepartment = signal<string | null>(null);
   readonly filterQualification = signal<string | null>(null);
   readonly showOnlyUnfilled = signal(true);
+  readonly filterDate = signal<Date>(new Date());
 
   // Zoom signal (months to display)
   readonly zoomLevel = signal<ZoomLevel>(12);
@@ -911,7 +939,7 @@ export class PositionGanttComponent {
     const groups = this.groupedPositions();
     const range = this.visibleDateRange();
     const totalDays = this.daysBetween(range.start, range.end);
-    const now = this.today();
+    const referenceDate = this.filterDate();
 
     return groups.map((group) => {
       const slices = this.calculateTimeSlices(group, range);
@@ -936,7 +964,8 @@ export class PositionGanttComponent {
         }));
       });
 
-      const currentSlice = slices.find((s) => now >= s.start && now <= s.end);
+      // Use filterDate for determining current fill (for the "unfilled" filter)
+      const currentSlice = slices.find((s) => referenceDate >= s.start && referenceDate <= s.end);
       const totalCurrentFill = currentSlice?.totalFillPercentage || 0;
       const hasGaps = segments.some((s) => s.isGap && s.widthPercent > 0.5);
 

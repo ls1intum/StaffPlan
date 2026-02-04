@@ -66,6 +66,21 @@
       />
       <label for="unfilled">Unvollständig besetzte Stellen</label>
     </div>
+    @if (showOnlyUnfilled()) {
+      <div class="filter-item filter-date-item">
+        <label for="filterDate">am</label>
+        <p-datepicker
+          inputId="filterDate"
+          [ngModel]="filterDate()"
+          (ngModelChange)="filterDate.set($event)"
+          dateFormat="dd.mm.yy"
+          [showIcon]="true"
+          [showButtonBar]="true"
+          todayButtonLabel="Heute"
+          clearButtonLabel="Löschen"
+        />
+      </div>
+    }
     <div class="filter-stats">
       {{ filteredRows().length }} von {{ ganttRows().length }} Stellen
       @if (totalWhiteSpots() > 0) {
