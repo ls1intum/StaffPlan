@@ -87,18 +87,18 @@ public class PositionFinderService {
             processedObjectIds.add(objectId);
 
             // Get position grade value (normalize the grade code for matching)
-            String normalizedGrade = normalizeGradeCode(position.getBaseGrade());
+            // Use tariffGroup which contains the actual grade (E10, E13, etc.)
+            String normalizedGrade = normalizeGradeCode(position.getTariffGroup());
             Optional<GradeValue> positionGradeOpt = gradeValueRepository.findByGradeCode(normalizedGrade);
             if (positionGradeOpt.isEmpty()) {
                 skippedUnknownGrade++;
                 if (skippedUnknownGrade <= 5) {
-                    log.warn("Skipping position {} - unknown grade: '{}' (normalized: '{}')", objectId, position.getBaseGrade(), normalizedGrade);
+                    log.warn("Skipping position {} - unknown grade: '{}' (normalized: '{}')", objectId, position.getTariffGroup(), normalizedGrade);
                 }
                 continue;
             }
 
             GradeValue positionGradeValue = positionGradeOpt.get();
-            BigDecimal positionBudget = calculatePositionBudget(positionGradeValue, position);
 
             // Get assignment info
             int assignmentCount = positionRepository.countAssignmentsByObjectId(objectId);
@@ -106,6 +106,12 @@ public class PositionFinderService {
             if (assignedPercentage == null) {
                 assignedPercentage = BigDecimal.ZERO;
             }
+
+            // Calculate available percentage (100% - assigned)
+            BigDecimal availablePercentage = BigDecimal.valueOf(100).subtract(assignedPercentage);
+
+            // Calculate position budget based on AVAILABLE percentage
+            BigDecimal positionBudget = calculatePositionBudgetForPercentage(positionGradeValue, availablePercentage);
 
             // Build matching context
             MatchingContext ctx = new MatchingContext(
@@ -119,9 +125,6 @@ public class PositionFinderService {
                     assignmentCount,
                     assignedPercentage
             );
-
-            // Check available percentage
-            BigDecimal availablePercentage = ctx.availablePercentage();
             if (availablePercentage.compareTo(BigDecimal.valueOf(fillPercentage)) < 0) {
                 skippedNoAvailability++;
                 if (skippedNoAvailability <= 5) {
@@ -179,7 +182,7 @@ public class PositionFinderService {
                     objectId,
                     position.getObjectCode(),
                     position.getObjectDescription(),
-                    position.getBaseGrade(),
+                    position.getTariffGroup(),  // Use tariffGroup for grade display
                     position.getPercentage(),
                     availablePercentage,
                     position.getStartDate(),
@@ -219,12 +222,11 @@ public class PositionFinderService {
                 .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
     }
 
-    private BigDecimal calculatePositionBudget(GradeValue gradeValue, Position position) {
+    private BigDecimal calculatePositionBudgetForPercentage(GradeValue gradeValue, BigDecimal percentage) {
         BigDecimal monthlyValue = gradeValue.getMonthlyValue();
         if (monthlyValue == null) {
             return BigDecimal.ZERO;
         }
-        BigDecimal percentage = position.getPercentage();
         if (percentage == null) {
             percentage = BigDecimal.valueOf(100);
         }
@@ -235,7 +237,7 @@ public class PositionFinderService {
     /**
      * Normalizes a grade code for matching.
      * Removes spaces, converts to uppercase, and handles common variations.
-     * Examples: "E 13" -> "E13", "e13" -> "E13", "E13 TVL" -> "E13"
+     * Examples: "E 13" -> "E13", "e13" -> "E13", "E13 TVL" -> "E13", "E13UE" -> "E13", "A13 A.Z." -> "A13"
      */
     private String normalizeGradeCode(String gradeCode) {
         if (gradeCode == null || gradeCode.isBlank()) {
@@ -243,9 +245,9 @@ public class PositionFinderService {
         }
         // Remove spaces and convert to uppercase
         String normalized = gradeCode.toUpperCase().replaceAll("\\s+", "");
-        // Remove common suffixes like "TVL", "TVÖD", etc.
-        normalized = normalized.replaceAll("(TVL|TVÖD|TV-L|TVOED)$", "");
-        // Handle cases like "E13A" or "E13B" -> keep as is
+        // Remove common suffixes like "TVL", "TVÖD", "UE" (Überleitungsentgelt), "A.Z." etc.
+        normalized = normalized.replaceAll("(TVL|TVÖD|TV-L|TVOED|UE|Ü|A\\.Z\\.)$", "");
+        // Handle cases like "E13A" or "E13B" -> keep as is (these are distinct grades)
         // Handle cases like "E9A" vs "E9a" -> normalize to uppercase (already done)
         return normalized;
     }

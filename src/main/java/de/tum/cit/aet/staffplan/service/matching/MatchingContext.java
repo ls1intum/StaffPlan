@@ -31,15 +31,10 @@ public record MatchingContext(
 ) {
     /**
      * Returns the available percentage on this position.
-     * Since we only look at unfilled positions, the position's own percentage represents
-     * the available capacity.
+     * Available = 100% - total assigned percentage for this objectId.
      */
     public BigDecimal availablePercentage() {
-        BigDecimal positionPercentage = position.getPercentage();
-        if (positionPercentage == null) {
-            positionPercentage = BigDecimal.valueOf(100);
-        }
-        return positionPercentage;
+        return BigDecimal.valueOf(100).subtract(currentAssignedPercentage);
     }
 
     /**
