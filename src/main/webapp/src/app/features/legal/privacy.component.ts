@@ -21,9 +21,7 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
 
         <section>
           <h2>2. Erhebung und Verarbeitung personenbezogener Daten</h2>
-          <p>
-            Bei der Nutzung von StaffPlan werden folgende personenbezogene Daten verarbeitet:
-          </p>
+          <p>Bei der Nutzung von StaffPlan werden folgende personenbezogene Daten verarbeitet:</p>
           <ul>
             <li>Name und Vorname</li>
             <li>E-Mail-Adresse</li>
@@ -70,7 +68,10 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
           <ul>
             <li>Auskunft über Ihre gespeicherten personenbezogenen Daten zu verlangen</li>
             <li>Berichtigung unrichtiger Daten zu verlangen</li>
-            <li>Löschung Ihrer Daten zu verlangen, soweit keine gesetzlichen Aufbewahrungspflichten entgegenstehen</li>
+            <li>
+              Löschung Ihrer Daten zu verlangen, soweit keine gesetzlichen Aufbewahrungspflichten
+              entgegenstehen
+            </li>
             <li>Einschränkung der Verarbeitung zu verlangen</li>
             <li>Sich bei einer Aufsichtsbehörde zu beschweren</li>
           </ul>

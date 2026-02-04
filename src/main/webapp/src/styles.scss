@@ -18,13 +18,8 @@ body {
 
 /* Global styles */
 
-/* Compact dropdown panel for PrimeNG 21+ Select */
-p-select-overlay,
-.p-select-overlay,
-.p-component-overlay,
-[class*='select-overlay'],
-[class*='dropdown-panel'],
-p-overlay-panel {
+/* Compact dropdown panel - used by position gantt filters via overlayStyleClass="compact-dropdown" */
+.compact-dropdown {
   font-size: 0.65rem !important;
 
   input[type='text'],
@@ -60,5 +55,26 @@ p-overlay-panel {
   .p-icon {
     width: 0.7rem !important;
     height: 0.7rem !important;
+  }
+}
+
+/* Also apply compact styles when overlay has the p-select-overlay class AND compact-dropdown */
+.p-select-overlay.compact-dropdown,
+.p-popover.compact-dropdown {
+  font-size: 0.65rem !important;
+
+  .p-select-option {
+    font-size: 0.65rem !important;
+    padding: 0.2rem 0.4rem !important;
+  }
+
+  .p-select-option-label {
+    font-size: 0.65rem !important;
+  }
+
+  .p-select-filter {
+    font-size: 0.65rem !important;
+    padding: 0.15rem 0.3rem !important;
+    height: 1.4rem !important;
   }
 }

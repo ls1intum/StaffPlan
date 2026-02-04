@@ -2,8 +2,11 @@ package de.tum.cit.aet.staffplan.repository;
 
 import de.tum.cit.aet.staffplan.domain.Position;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -17,4 +20,44 @@ public interface PositionRepository extends JpaRepository<Position, UUID> {
     List<Position> findAllByOrderByStartDateAsc();
 
     void deleteByResearchGroupId(UUID researchGroupId);
+
+    /**
+     * Finds candidate positions for matching.
+     * Returns unfilled positions (no personnel number) that have time overlap with the requested period.
+     */
+    @Query("""
+            SELECT p FROM Position p
+            WHERE (p.startDate IS NULL OR p.startDate <= :endDate)
+              AND (p.endDate IS NULL OR p.endDate >= :startDate)
+              AND (p.personnelNumber IS NULL OR p.personnelNumber = '')
+              AND (:researchGroupId IS NULL OR p.researchGroup.id = :researchGroupId)
+            ORDER BY p.baseGrade, p.startDate
+            """)
+    List<Position> findCandidatePositions(
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate,
+            @Param("researchGroupId") UUID researchGroupId);
+
+    /**
+     * Counts the number of assignments (occupied entries) for a position based on personnel number.
+     * A position is considered assigned if it has a personnel number.
+     */
+    @Query("""
+            SELECT COUNT(p) FROM Position p
+            WHERE p.objectId = :objectId
+              AND p.personnelNumber IS NOT NULL
+              AND p.personnelNumber <> ''
+            """)
+    int countAssignmentsByObjectId(@Param("objectId") String objectId);
+
+    /**
+     * Calculates the total assigned percentage for a position.
+     */
+    @Query("""
+            SELECT COALESCE(SUM(p.percentage), 0) FROM Position p
+            WHERE p.objectId = :objectId
+              AND p.personnelNumber IS NOT NULL
+              AND p.personnelNumber <> ''
+            """)
+    java.math.BigDecimal sumAssignedPercentageByObjectId(@Param("objectId") String objectId);
 }

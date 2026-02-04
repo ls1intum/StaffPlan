@@ -8,6 +8,13 @@ import { UserService, UserDTO, SecurityStore } from '../../core/security';
 
 const AVAILABLE_ROLES = ['admin', 'job_manager', 'professor', 'employee'] as const;
 
+const ROLE_LABELS: Record<string, string> = {
+  admin: 'Administrator',
+  job_manager: 'Stellenverwalter',
+  professor: 'Professor',
+  employee: 'Mitarbeiter',
+};
+
 @Component({
   selector: 'app-admin-users',
   imports: [FormsModule, Card, TableModule, Checkbox, Button],
@@ -16,9 +23,9 @@ const AVAILABLE_ROLES = ['admin', 'job_manager', 'professor', 'employee'] as con
       <p-card>
         <ng-template #header>
           <div class="card-header">
-            <h2>User Management</h2>
+            <h2>Benutzerverwaltung</h2>
             <p-button
-              label="Refresh"
+              label="Aktualisieren"
               icon="pi pi-refresh"
               [outlined]="true"
               (onClick)="loadUsers()"
@@ -27,16 +34,16 @@ const AVAILABLE_ROLES = ['admin', 'job_manager', 'professor', 'employee'] as con
         </ng-template>
 
         @if (loading()) {
-          <div class="loading">Loading users...</div>
+          <div class="loading">Benutzer werden geladen...</div>
         } @else {
           <p-table [value]="users()" [tableStyle]="{ 'min-width': '60rem' }">
             <ng-template #header>
               <tr>
                 <th>Name</th>
-                <th>University ID</th>
-                <th>Email</th>
-                <th>Roles</th>
-                <th>Actions</th>
+                <th>Kennung</th>
+                <th>E-Mail</th>
+                <th>Rollen</th>
+                <th>Aktionen</th>
               </tr>
             </ng-template>
             <ng-template #body let-user>
@@ -61,7 +68,7 @@ const AVAILABLE_ROLES = ['admin', 'job_manager', 'professor', 'employee'] as con
                 </td>
                 <td>
                   <p-button
-                    label="Save"
+                    label="Speichern"
                     icon="pi pi-check"
                     size="small"
                     [disabled]="!hasChanges(user)"
@@ -191,9 +198,6 @@ export class AdminUsersComponent implements OnInit {
   }
 
   formatRole(role: string): string {
-    return role
-      .split('_')
-      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ');
+    return ROLE_LABELS[role] ?? role;
   }
 }

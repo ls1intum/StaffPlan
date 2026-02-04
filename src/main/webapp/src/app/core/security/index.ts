@@ -3,6 +3,7 @@ export { SecurityStore } from './security-store.service';
 export type { User } from './security-store.service';
 export { AuthGuard, authGuard } from './auth.guard';
 export { AdminGuard, adminGuard } from './admin.guard';
+export { JobManagerGuard, jobManagerGuard } from './job-manager.guard';
 export { authInterceptor } from './auth.interceptor';
 export { UserService } from './user.service';
 export type { UserDTO } from './user.service';

@@ -98,12 +98,12 @@ export class PositionUploadComponent {
     this.positionService.uploadCsv(file).subscribe({
       next: (result) => {
         this.uploading.set(false);
-        this.successMessage.set(`Successfully imported ${result.count} positions`);
+        this.successMessage.set(`${result.count} Stellen erfolgreich importiert`);
         this.uploaded.emit();
       },
       error: (err) => {
         this.uploading.set(false);
-        this.errorMessage.set(err.error?.error || 'Failed to upload file');
+        this.errorMessage.set(err.error?.error || 'Datei konnte nicht hochgeladen werden');
       },
     });
   }

@@ -6,20 +6,28 @@
   </div>
   <nav class="nav">
     @if (securityStore.isLoading()) {
-      <span>Loading...</span>
+      <span>Laden...</span>
     } @else if (securityStore.user()) {
       @if (securityStore.hasAnyRole()) {
-        <a routerLink="/positions" routerLinkActive="active" class="nav-link">Positions</a>
+        <a routerLink="/positions" routerLinkActive="active" class="nav-link">Stellen</a>
+        @if (securityStore.isJobManager() || securityStore.isAdmin()) {
+          <a routerLink="/position-finder" routerLinkActive="active" class="nav-link"
+            >Stellensuche</a
+          >
+        }
         @if (securityStore.isAdmin()) {
-          <a routerLink="/admin/users" routerLinkActive="active" class="nav-link">Users</a>
+          <a routerLink="/admin/users" routerLinkActive="active" class="nav-link">Benutzer</a>
+          <a routerLink="/admin/grade-values" routerLinkActive="active" class="nav-link"
+            >Stellenwertigkeiten</a
+          >
         }
       }
       <span class="user-info">
         {{ securityStore.user()?.firstName }} {{ securityStore.user()?.lastName }}
       </span>
-      <button class="btn btn-outline" (click)="securityStore.signOut()">Logout</button>
+      <button class="btn btn-outline" (click)="securityStore.signOut()">Abmelden</button>
     } @else {
-      <button class="btn btn-primary" (click)="securityStore.signIn()">Login</button>
+      <button class="btn btn-primary" (click)="securityStore.signIn()">Anmelden</button>
     }
   </nav>
 </header>

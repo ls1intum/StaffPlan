@@ -1,0 +1,252 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
+                   objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
+
+    <!-- Grade Values table for Stellenwertigkeit -->
+    <changeSet id="002-1" author="krusche">
+        <createTable tableName="grade_values">
+            <column name="grade_value_id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_grade_values"/>
+            </column>
+            <column name="grade_code" type="VARCHAR(20)">
+                <constraints nullable="false" unique="true" uniqueConstraintName="uc_grade_values_code"/>
+            </column>
+            <column name="grade_type" type="VARCHAR(10)"/>
+            <column name="display_name" type="VARCHAR(100)"/>
+            <column name="monthly_value" type="DECIMAL(10,2)"/>
+            <column name="min_salary" type="DECIMAL(10,2)"/>
+            <column name="max_salary" type="DECIMAL(10,2)"/>
+            <column name="sort_order" type="INTEGER"/>
+            <column name="active" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <!-- Index for grade_type queries -->
+    <changeSet id="002-2" author="krusche">
+        <createIndex tableName="grade_values" indexName="idx_grade_values_type">
+            <column name="grade_type"/>
+        </createIndex>
+        <createIndex tableName="grade_values" indexName="idx_grade_values_sort_order">
+            <column name="sort_order"/>
+        </createIndex>
+    </changeSet>
+
+    <!-- Seed data: TV-L grades (Entgelt) -->
+    <changeSet id="002-3" author="krusche">
+        <insert tableName="grade_values">
+            <column name="grade_value_id" valueComputed="gen_random_uuid()"/>
+            <column name="grade_code" value="E6"/>
+            <column name="grade_type" value="E"/>
+            <column name="display_name" value="Entgeltgruppe 6"/>
+            <column name="monthly_value" valueNumeric="3450.00"/>
+            <column name="min_salary" valueNumeric="3100.00"/>
+            <column name="max_salary" valueNumeric="3800.00"/>
+            <column name="sort_order" valueNumeric="10"/>
+            <column name="active" valueBoolean="true"/>
+            <column name="created_at" valueComputed="NOW()"/>
+            <column name="updated_at" valueComputed="NOW()"/>
+        </insert>
+        <insert tableName="grade_values">
+            <column name="grade_value_id" valueComputed="gen_random_uuid()"/>
+            <column name="grade_code" value="E8"/>
+            <column name="grade_type" value="E"/>
+            <column name="display_name" value="Entgeltgruppe 8"/>
+            <column name="monthly_value" valueNumeric="3600.00"/>
+            <column name="min_salary" valueNumeric="3200.00"/>
+            <column name="max_salary" valueNumeric="4000.00"/>
+            <column name="sort_order" valueNumeric="20"/>
+            <column name="active" valueBoolean="true"/>
+            <column name="created_at" valueComputed="NOW()"/>
+            <column name="updated_at" valueComputed="NOW()"/>
+        </insert>
+        <insert tableName="grade_values">
+            <column name="grade_value_id" valueComputed="gen_random_uuid()"/>
+            <column name="grade_code" value="E9A"/>
+            <column name="grade_type" value="E"/>
+            <column name="display_name" value="Entgeltgruppe 9a"/>
+            <column name="monthly_value" valueNumeric="4050.00"/>
+            <column name="min_salary" valueNumeric="3600.00"/>
+            <column name="max_salary" valueNumeric="4500.00"/>
+            <column name="sort_order" valueNumeric="30"/>
+            <column name="active" valueBoolean="true"/>
+            <column name="created_at" valueComputed="NOW()"/>
+            <column name="updated_at" valueComputed="NOW()"/>
+        </insert>
+        <insert tableName="grade_values">
+            <column name="grade_value_id" valueComputed="gen_random_uuid()"/>
+            <column name="grade_code" value="E9B"/>
+            <column name="grade_type" value="E"/>
+            <column name="display_name" value="Entgeltgruppe 9b"/>
+            <column name="monthly_value" valueNumeric="4050.00"/>
+            <column name="min_salary" valueNumeric="3600.00"/>
+            <column name="max_salary" valueNumeric="4500.00"/>
+            <column name="sort_order" valueNumeric="35"/>
+            <column name="active" valueBoolean="true"/>
+            <column name="created_at" valueComputed="NOW()"/>
+            <column name="updated_at" valueComputed="NOW()"/>
+        </insert>
+        <insert tableName="grade_values">
+            <column name="grade_value_id" valueComputed="gen_random_uuid()"/>
+            <column name="grade_code" value="E10"/>
+            <column name="grade_type" value="E"/>
+            <column name="display_name" value="Entgeltgruppe 10"/>
+            <column name="monthly_value" valueNumeric="4350.00"/>
+            <column name="min_salary" valueNumeric="3900.00"/>
+            <column name="max_salary" valueNumeric="4800.00"/>
+            <column name="sort_order" valueNumeric="40"/>
+            <column name="active" valueBoolean="true"/>
+            <column name="created_at" valueComputed="NOW()"/>
+            <column name="updated_at" valueComputed="NOW()"/>
+        </insert>
+        <insert tableName="grade_values">
+            <column name="grade_value_id" valueComputed="gen_random_uuid()"/>
+            <column name="grade_code" value="E11"/>
+            <column name="grade_type" value="E"/>
+            <column name="display_name" value="Entgeltgruppe 11"/>
+            <column name="monthly_value" valueNumeric="4550.00"/>
+            <column name="min_salary" valueNumeric="4100.00"/>
+            <column name="max_salary" valueNumeric="5000.00"/>
+            <column name="sort_order" valueNumeric="50"/>
+            <column name="active" valueBoolean="true"/>
+            <column name="created_at" valueComputed="NOW()"/>
+            <column name="updated_at" valueComputed="NOW()"/>
+        </insert>
+        <insert tableName="grade_values">
+            <column name="grade_value_id" valueComputed="gen_random_uuid()"/>
+            <column name="grade_code" value="E12"/>
+            <column name="grade_type" value="E"/>
+            <column name="display_name" value="Entgeltgruppe 12"/>
+            <column name="monthly_value" valueNumeric="4750.00"/>
+            <column name="min_salary" valueNumeric="4200.00"/>
+            <column name="max_salary" valueNumeric="5300.00"/>
+            <column name="sort_order" valueNumeric="60"/>
+            <column name="active" valueBoolean="true"/>
+            <column name="created_at" valueComputed="NOW()"/>
+            <column name="updated_at" valueComputed="NOW()"/>
+        </insert>
+        <insert tableName="grade_values">
+            <column name="grade_value_id" valueComputed="gen_random_uuid()"/>
+            <column name="grade_code" value="E13"/>
+            <column name="grade_type" value="E"/>
+            <column name="display_name" value="Entgeltgruppe 13"/>
+            <column name="monthly_value" valueNumeric="5600.00"/>
+            <column name="min_salary" valueNumeric="4700.00"/>
+            <column name="max_salary" valueNumeric="6500.00"/>
+            <column name="sort_order" valueNumeric="70"/>
+            <column name="active" valueBoolean="true"/>
+            <column name="created_at" valueComputed="NOW()"/>
+            <column name="updated_at" valueComputed="NOW()"/>
+        </insert>
+        <insert tableName="grade_values">
+            <column name="grade_value_id" valueComputed="gen_random_uuid()"/>
+            <column name="grade_code" value="E14"/>
+            <column name="grade_type" value="E"/>
+            <column name="display_name" value="Entgeltgruppe 14"/>
+            <column name="monthly_value" valueNumeric="6000.00"/>
+            <column name="min_salary" valueNumeric="5100.00"/>
+            <column name="max_salary" valueNumeric="6900.00"/>
+            <column name="sort_order" valueNumeric="80"/>
+            <column name="active" valueBoolean="true"/>
+            <column name="created_at" valueComputed="NOW()"/>
+            <column name="updated_at" valueComputed="NOW()"/>
+        </insert>
+        <insert tableName="grade_values">
+            <column name="grade_value_id" valueComputed="gen_random_uuid()"/>
+            <column name="grade_code" value="E15"/>
+            <column name="grade_type" value="E"/>
+            <column name="display_name" value="Entgeltgruppe 15"/>
+            <column name="monthly_value" valueNumeric="6550.00"/>
+            <column name="min_salary" valueNumeric="5500.00"/>
+            <column name="max_salary" valueNumeric="7600.00"/>
+            <column name="sort_order" valueNumeric="90"/>
+            <column name="active" valueBoolean="true"/>
+            <column name="created_at" valueComputed="NOW()"/>
+            <column name="updated_at" valueComputed="NOW()"/>
+        </insert>
+    </changeSet>
+
+    <!-- Seed data: Beamtenbesoldung (A grades) -->
+    <changeSet id="002-4" author="krusche">
+        <insert tableName="grade_values">
+            <column name="grade_value_id" valueComputed="gen_random_uuid()"/>
+            <column name="grade_code" value="A13"/>
+            <column name="grade_type" value="A"/>
+            <column name="display_name" value="Besoldungsgruppe A13"/>
+            <column name="monthly_value" valueNumeric="5600.00"/>
+            <column name="min_salary" valueNumeric="5200.00"/>
+            <column name="max_salary" valueNumeric="6000.00"/>
+            <column name="sort_order" valueNumeric="100"/>
+            <column name="active" valueBoolean="true"/>
+            <column name="created_at" valueComputed="NOW()"/>
+            <column name="updated_at" valueComputed="NOW()"/>
+        </insert>
+        <insert tableName="grade_values">
+            <column name="grade_value_id" valueComputed="gen_random_uuid()"/>
+            <column name="grade_code" value="A14"/>
+            <column name="grade_type" value="A"/>
+            <column name="display_name" value="Besoldungsgruppe A14"/>
+            <column name="monthly_value" valueNumeric="6100.00"/>
+            <column name="min_salary" valueNumeric="5600.00"/>
+            <column name="max_salary" valueNumeric="6600.00"/>
+            <column name="sort_order" valueNumeric="110"/>
+            <column name="active" valueBoolean="true"/>
+            <column name="created_at" valueComputed="NOW()"/>
+            <column name="updated_at" valueComputed="NOW()"/>
+        </insert>
+        <insert tableName="grade_values">
+            <column name="grade_value_id" valueComputed="gen_random_uuid()"/>
+            <column name="grade_code" value="A15"/>
+            <column name="grade_type" value="A"/>
+            <column name="display_name" value="Besoldungsgruppe A15"/>
+            <column name="monthly_value" valueNumeric="6900.00"/>
+            <column name="min_salary" valueNumeric="6400.00"/>
+            <column name="max_salary" valueNumeric="7400.00"/>
+            <column name="sort_order" valueNumeric="120"/>
+            <column name="active" valueBoolean="true"/>
+            <column name="created_at" valueComputed="NOW()"/>
+            <column name="updated_at" valueComputed="NOW()"/>
+        </insert>
+    </changeSet>
+
+    <!-- Seed data: W-Besoldung (Professoren) -->
+    <changeSet id="002-5" author="krusche">
+        <insert tableName="grade_values">
+            <column name="grade_value_id" valueComputed="gen_random_uuid()"/>
+            <column name="grade_code" value="W2"/>
+            <column name="grade_type" value="W"/>
+            <column name="display_name" value="W2-Professur"/>
+            <column name="monthly_value" valueNumeric="7100.00"/>
+            <column name="min_salary" valueNumeric="6800.00"/>
+            <column name="max_salary" valueNumeric="7500.00"/>
+            <column name="sort_order" valueNumeric="200"/>
+            <column name="active" valueBoolean="true"/>
+            <column name="created_at" valueComputed="NOW()"/>
+            <column name="updated_at" valueComputed="NOW()"/>
+        </insert>
+        <insert tableName="grade_values">
+            <column name="grade_value_id" valueComputed="gen_random_uuid()"/>
+            <column name="grade_code" value="W3"/>
+            <column name="grade_type" value="W"/>
+            <column name="display_name" value="W3-Professur"/>
+            <column name="monthly_value" valueNumeric="8300.00"/>
+            <column name="min_salary" valueNumeric="8000.00"/>
+            <column name="max_salary" valueNumeric="8600.00"/>
+            <column name="sort_order" valueNumeric="210"/>
+            <column name="active" valueBoolean="true"/>
+            <column name="created_at" valueComputed="NOW()"/>
+            <column name="updated_at" valueComputed="NOW()"/>
+        </insert>
+    </changeSet>
+
+</databaseChangeLog>

@@ -8,11 +8,11 @@ import { SecurityStore } from '../../core/security';
   template: `
     <div class="landing-container">
       @if (securityStore.isLoading()) {
-        <p>Loading...</p>
+        <p>Laden...</p>
       } @else {
-        <h2>Welcome to StaffPlan</h2>
-        <p>Manage your staff positions efficiently.</p>
-        <p>Please use the Login button in the header to access the application.</p>
+        <h2>Willkommen bei StaffPlan</h2>
+        <p>Verwalten Sie Ihre Stellen effizient.</p>
+        <p>Bitte nutzen Sie die Anmelden-Schaltfläche oben, um auf die Anwendung zuzugreifen.</p>
       }
     </div>
   `,

@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { authGuard, adminGuard } from './core/security';
+import { authGuard, adminGuard, jobManagerGuard } from './core/security';
 
 export const routes: Routes = [
   {
@@ -14,9 +14,25 @@ export const routes: Routes = [
     canActivate: [authGuard],
   },
   {
+    path: 'position-finder',
+    loadComponent: () =>
+      import('./features/position-finder/position-finder-page.component').then(
+        (m) => m.PositionFinderPageComponent,
+      ),
+    canActivate: [jobManagerGuard],
+  },
+  {
     path: 'admin/users',
     loadComponent: () =>
       import('./features/admin/admin-users.component').then((m) => m.AdminUsersComponent),
+    canActivate: [adminGuard],
+  },
+  {
+    path: 'admin/grade-values',
+    loadComponent: () =>
+      import('./features/admin/grade-values/grade-values-admin.component').then(
+        (m) => m.GradeValuesAdminComponent,
+      ),
     canActivate: [adminGuard],
   },
   {

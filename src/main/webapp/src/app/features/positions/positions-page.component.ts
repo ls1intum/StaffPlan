@@ -21,7 +21,11 @@ import { Position } from './position.model';
       @if (loading()) {
         <div class="loading">Positionen werden geladen...</div>
       } @else {
-        <app-position-gantt [positions]="positions()" [canManage]="canManage()" (clearData)="clearPositions()">
+        <app-position-gantt
+          [positions]="positions()"
+          [canManage]="canManage()"
+          (clearData)="clearPositions()"
+        >
           <div class="header-actions" header-slot>
             @if (canManage()) {
               <app-position-upload (uploaded)="loadPositions()" />

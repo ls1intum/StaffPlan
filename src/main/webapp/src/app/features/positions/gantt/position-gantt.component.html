@@ -17,7 +17,7 @@
       <p-select
         id="relevanceType"
         styleClass="filter-select-wide"
-        overlayStyleClass="compact-dropdown"
+        panelStyleClass="compact-dropdown"
         [options]="relevanceTypeOptions()"
         [ngModel]="filterRelevanceType()"
         (ngModelChange)="filterRelevanceType.set($event)"
@@ -32,7 +32,7 @@
       <p-select
         id="department"
         styleClass="filter-select-wide"
-        overlayStyleClass="compact-dropdown"
+        panelStyleClass="compact-dropdown"
         [options]="departmentOptions()"
         [ngModel]="filterDepartment()"
         (ngModelChange)="filterDepartment.set($event)"
@@ -47,7 +47,7 @@
       <p-select
         id="qualification"
         styleClass="filter-select"
-        overlayStyleClass="compact-dropdown"
+        panelStyleClass="compact-dropdown"
         [options]="qualificationOptions()"
         [ngModel]="filterQualification()"
         (ngModelChange)="filterQualification.set($event)"
