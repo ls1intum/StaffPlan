@@ -2,6 +2,7 @@ package de.tum.cit.aet.usermanagement.dto;
 
 import de.tum.cit.aet.usermanagement.domain.User;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
@@ -11,7 +12,8 @@ public record UserDTO(
         String email,
         String firstName,
         String lastName,
-        List<String> roles
+        List<String> roles,
+        Instant lastLoginAt
 ) {
     /**
      * Creates a UserDTO from a User entity.
@@ -28,7 +30,8 @@ public record UserDTO(
                 user.getEmail(),
                 user.getFirstName(),
                 user.getLastName(),
-                roles
+                roles,
+                user.getLastLoginAt()
         );
     }
 }

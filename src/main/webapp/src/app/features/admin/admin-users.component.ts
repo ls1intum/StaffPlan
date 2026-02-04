@@ -1,9 +1,12 @@
 import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { DatePipe } from '@angular/common';
 import { Card } from 'primeng/card';
 import { TableModule } from 'primeng/table';
 import { Checkbox } from 'primeng/checkbox';
 import { Button } from 'primeng/button';
+import { Tag } from 'primeng/tag';
+import { Tooltip } from 'primeng/tooltip';
 import { UserService, UserDTO, SecurityStore } from '../../core/security';
 
 const AVAILABLE_ROLES = ['admin', 'job_manager', 'professor', 'employee'] as const;
@@ -17,7 +20,7 @@ const ROLE_LABELS: Record<string, string> = {
 
 @Component({
   selector: 'app-admin-users',
-  imports: [FormsModule, Card, TableModule, Checkbox, Button],
+  imports: [FormsModule, DatePipe, Card, TableModule, Checkbox, Button, Tag, Tooltip],
   template: `
     <div class="admin-users-page">
       <p-card>
@@ -36,12 +39,13 @@ const ROLE_LABELS: Record<string, string> = {
         @if (loading()) {
           <div class="loading">Benutzer werden geladen...</div>
         } @else {
-          <p-table [value]="users()" [tableStyle]="{ 'min-width': '60rem' }">
+          <p-table [value]="users()" [tableStyle]="{ 'min-width': '70rem' }">
             <ng-template #header>
               <tr>
                 <th>Name</th>
                 <th>Kennung</th>
                 <th>E-Mail</th>
+                <th>Letzter Login</th>
                 <th>Rollen</th>
                 <th>Aktionen</th>
               </tr>
@@ -51,6 +55,22 @@ const ROLE_LABELS: Record<string, string> = {
                 <td>{{ user.firstName }} {{ user.lastName }}</td>
                 <td>{{ user.universityId }}</td>
                 <td>{{ user.email }}</td>
+                <td>
+                  @if (user.lastLoginAt) {
+                    <span
+                      class="login-date"
+                      [pTooltip]="(user.lastLoginAt | date: 'dd.MM.yyyy HH:mm:ss') ?? ''"
+                    >
+                      {{ user.lastLoginAt | date: 'dd.MM.yyyy' }}
+                    </span>
+                  } @else {
+                    <p-tag
+                      value="Nie angemeldet"
+                      severity="secondary"
+                      pTooltip="Benutzer wurde importiert, hat sich aber noch nie angemeldet"
+                    />
+                  }
+                </td>
                 <td>
                   <div class="roles-container">
                     @for (role of availableRoles; track role) {
@@ -114,6 +134,11 @@ const ROLE_LABELS: Record<string, string> = {
       display: flex;
       align-items: center;
       gap: 0.5rem;
+    }
+
+    .login-date {
+      color: var(--p-text-color);
+      cursor: default;
     }
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,

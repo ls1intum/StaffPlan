@@ -10,6 +10,7 @@ export interface UserDTO {
   firstName: string;
   lastName: string;
   roles: string[];
+  lastLoginAt: string | null;
 }
 
 @Injectable({ providedIn: 'root' })

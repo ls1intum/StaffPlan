@@ -7,7 +7,6 @@ import {
   computed,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Card } from 'primeng/card';
 import { TableModule } from 'primeng/table';
 import { Button } from 'primeng/button';
 import { Dialog } from 'primeng/dialog';
@@ -40,7 +39,6 @@ const CAMPUSES = [
   selector: 'app-research-groups-admin',
   imports: [
     FormsModule,
-    Card,
     TableModule,
     Button,
     Dialog,
@@ -56,42 +54,40 @@ const CAMPUSES = [
   providers: [ConfirmationService, MessageService],
   template: `
     <div class="research-groups-page">
-      <p-card>
-        <ng-template #header>
-          <div class="card-header">
-            <h2>Forschungsgruppen</h2>
-            <div class="actions">
-              <p-fileupload
-                mode="basic"
-                name="file"
-                accept=".csv"
-                [auto]="true"
-                chooseLabel="CSV Import"
-                chooseIcon="pi pi-upload"
-                (uploadHandler)="onCsvUpload($event)"
-                [customUpload]="true"
-              />
-              <p-button
-                label="Positionen zuordnen"
-                icon="pi pi-link"
-                [outlined]="true"
-                (onClick)="batchAssignPositions()"
-                [loading]="assigningPositions()"
-              />
-              <p-button
-                label="Aktualisieren"
-                icon="pi pi-refresh"
-                [outlined]="true"
-                (onClick)="loadResearchGroups()"
-              />
-              <p-button label="Hinzufügen" icon="pi pi-plus" (onClick)="openCreateDialog()" />
-            </div>
-          </div>
-        </ng-template>
+      <div class="page-header">
+        <h2>Forschungsgruppen</h2>
+        <div class="actions">
+          <p-fileupload
+            mode="basic"
+            name="file"
+            accept=".csv"
+            [auto]="true"
+            chooseLabel="CSV Import"
+            chooseIcon="pi pi-upload"
+            (uploadHandler)="onCsvUpload($event)"
+            [customUpload]="true"
+          />
+          <p-button
+            label="Positionen zuordnen"
+            icon="pi pi-link"
+            [outlined]="true"
+            (onClick)="batchAssignPositions()"
+            [loading]="assigningPositions()"
+          />
+          <p-button
+            label="Aktualisieren"
+            icon="pi pi-refresh"
+            [outlined]="true"
+            (onClick)="loadResearchGroups()"
+          />
+          <p-button label="Hinzufügen" icon="pi pi-plus" (onClick)="openCreateDialog()" />
+        </div>
+      </div>
 
-        @if (loading()) {
-          <div class="loading">Forschungsgruppen werden geladen...</div>
-        } @else {
+      @if (loading()) {
+        <div class="loading">Forschungsgruppen werden geladen...</div>
+      } @else {
+        <div class="table-container">
           <p-table
             [value]="researchGroups()"
             [tableStyle]="{ 'min-width': '90rem' }"
@@ -99,6 +95,8 @@ const CAMPUSES = [
             [paginator]="true"
             [rows]="20"
             [rowsPerPageOptions]="[10, 20, 50, 100]"
+            [scrollable]="true"
+            scrollHeight="flex"
           >
             <ng-template #header>
               <tr>
@@ -215,9 +213,20 @@ const CAMPUSES = [
                 </td>
               </tr>
             </ng-template>
+            <ng-template #paginatorright>
+              <p-button
+                label="Alle Daten löschen"
+                icon="pi pi-trash"
+                severity="danger"
+                [outlined]="true"
+                size="small"
+                (onClick)="confirmDeleteAll()"
+                [loading]="deletingAll()"
+              />
+            </ng-template>
           </p-table>
-        }
-      </p-card>
+        </div>
+      }
 
       <p-dialog
         [header]="isEditing() ? 'Forschungsgruppe bearbeiten' : 'Forschungsgruppe erstellen'"
@@ -366,33 +375,33 @@ const CAMPUSES = [
         </ng-template>
       </p-dialog>
 
-      <div class="page-footer">
-        <p-button
-          label="Alle Daten löschen"
-          icon="pi pi-trash"
-          severity="danger"
-          [outlined]="true"
-          (onClick)="confirmDeleteAll()"
-          [loading]="deletingAll()"
-        />
-      </div>
-
       <p-confirmDialog />
       <p-toast />
     </div>
   `,
   styles: `
+    :host {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-height: 0;
+    }
+
     .research-groups-page {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-height: 0;
       padding: 1rem;
     }
 
-    .card-header {
+    .page-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 1rem;
       flex-wrap: wrap;
       gap: 1rem;
+      margin-bottom: 1rem;
 
       h2 {
         margin: 0;
@@ -403,6 +412,16 @@ const CAMPUSES = [
         gap: 0.5rem;
         flex-wrap: wrap;
       }
+    }
+
+    .table-container {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-height: 0;
+      border: 1px solid var(--p-surface-200);
+      border-radius: 8px;
+      overflow: hidden;
     }
 
     .loading {
@@ -575,14 +594,6 @@ const CAMPUSES = [
           color: var(--p-yellow-700);
         }
       }
-    }
-
-    .page-footer {
-      display: flex;
-      justify-content: flex-end;
-      margin-top: 1rem;
-      padding-top: 1rem;
-      border-top: 1px solid var(--p-surface-200);
     }
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
