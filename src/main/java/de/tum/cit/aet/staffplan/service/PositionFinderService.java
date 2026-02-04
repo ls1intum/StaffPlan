@@ -5,6 +5,7 @@ import de.tum.cit.aet.staffplan.domain.Position;
 import de.tum.cit.aet.staffplan.dto.PositionFinderRequestDTO;
 import de.tum.cit.aet.staffplan.dto.PositionFinderResponseDTO;
 import de.tum.cit.aet.staffplan.dto.PositionMatchDTO;
+import de.tum.cit.aet.staffplan.dto.SplitSuggestionDTO;
 import de.tum.cit.aet.staffplan.repository.GradeValueRepository;
 import de.tum.cit.aet.staffplan.repository.PositionRepository;
 import de.tum.cit.aet.staffplan.service.matching.MatchingContext;
@@ -204,12 +205,28 @@ public class PositionFinderService {
         log.info("Found {} matching positions (skipped: {} unknown grade, {} no availability, {} by rules)",
                 matches.size(), skippedUnknownGrade, skippedNoAvailability, skippedByRules);
 
+        // Generate split suggestions if no single position can fully accommodate
+        List<SplitSuggestionDTO> splitSuggestions = List.of();
+        if (matches.isEmpty()) {
+            splitSuggestions = generateSplitSuggestions(
+                    candidates,
+                    processedObjectIds,
+                    normalizedEmployeeGrade,
+                    employeeGradeValue,
+                    employeeMonthlyCost,
+                    fillPercentage,
+                    request
+            );
+            log.info("Generated {} split suggestions", splitSuggestions.size());
+        }
+
         return new PositionFinderResponseDTO(
                 employeeMonthlyCost.setScale(2, RoundingMode.HALF_UP),
                 request.employeeGrade(),
                 fillPercentage,
                 matches.size(),
-                matches
+                matches,
+                splitSuggestions
         );
     }
 
@@ -232,6 +249,153 @@ public class PositionFinderService {
         }
         return monthlyValue.multiply(percentage)
                 .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+    }
+
+    /**
+     * Generates split suggestions when no single position can accommodate the full request.
+     * Finds combinations of positions that together can satisfy the requested percentage.
+     */
+    private List<SplitSuggestionDTO> generateSplitSuggestions(
+            List<Position> candidates,
+            Set<String> processedObjectIds,
+            String normalizedEmployeeGrade,
+            GradeValue employeeGradeValue,
+            BigDecimal employeeMonthlyCost,
+            int fillPercentage,
+            PositionFinderRequestDTO request
+    ) {
+        // Collect all positions with any available capacity that match the grade
+        List<PositionMatchDTO> partialMatches = new ArrayList<>();
+        Set<String> seenObjectIds = new HashSet<>();
+
+        for (Position position : candidates) {
+            String objectId = position.getObjectId();
+            if (objectId == null || seenObjectIds.contains(objectId)) {
+                continue;
+            }
+            seenObjectIds.add(objectId);
+
+            // Check grade matches
+            String normalizedGrade = normalizeGradeCode(position.getTariffGroup());
+            Optional<GradeValue> positionGradeOpt = gradeValueRepository.findByGradeCode(normalizedGrade);
+            if (positionGradeOpt.isEmpty()) {
+                continue;
+            }
+
+            GradeValue positionGradeValue = positionGradeOpt.get();
+
+            // Only include positions of the same or higher grade (budget-wise)
+            if (positionGradeValue.getMonthlyValue().compareTo(employeeGradeValue.getMonthlyValue()) < 0) {
+                continue;
+            }
+
+            // Get available percentage
+            BigDecimal assignedPercentage = positionRepository.sumAssignedPercentageByObjectId(objectId);
+            if (assignedPercentage == null) {
+                assignedPercentage = BigDecimal.ZERO;
+            }
+            BigDecimal availablePercentage = BigDecimal.valueOf(100).subtract(assignedPercentage);
+
+            // Skip if no availability
+            if (availablePercentage.compareTo(BigDecimal.ZERO) <= 0) {
+                continue;
+            }
+
+            int assignmentCount = positionRepository.countAssignmentsByObjectId(objectId);
+
+            // Calculate budget and waste for this partial position
+            BigDecimal positionBudget = calculatePositionBudgetForPercentage(positionGradeValue, availablePercentage);
+            BigDecimal partialEmployeeCost = calculateMonthlyCost(employeeGradeValue, availablePercentage.intValue());
+            BigDecimal waste = positionBudget.subtract(partialEmployeeCost);
+            if (waste.compareTo(BigDecimal.ZERO) < 0) {
+                waste = BigDecimal.ZERO;
+            }
+            double wastePercentage = positionBudget.compareTo(BigDecimal.ZERO) > 0
+                    ? waste.divide(positionBudget, 4, RoundingMode.HALF_UP).multiply(BigDecimal.valueOf(100)).doubleValue()
+                    : 0;
+
+            PositionMatchDTO match = new PositionMatchDTO(
+                    position.getId(),
+                    objectId,
+                    position.getObjectCode(),
+                    position.getObjectDescription(),
+                    position.getTariffGroup(),
+                    position.getPercentage(),
+                    availablePercentage,
+                    position.getStartDate(),
+                    position.getEndDate(),
+                    50.0, // Default score for partial matches
+                    PositionMatchDTO.MatchQuality.FAIR,
+                    waste.setScale(2, RoundingMode.HALF_UP),
+                    Math.round(wastePercentage * 100) / 100.0,
+                    assignmentCount,
+                    List.of()
+            );
+
+            partialMatches.add(match);
+        }
+
+        // Sort by available percentage descending to prefer larger chunks
+        partialMatches.sort((a, b) -> b.availablePercentage().compareTo(a.availablePercentage()));
+
+        List<SplitSuggestionDTO> suggestions = new ArrayList<>();
+        BigDecimal targetPercentage = BigDecimal.valueOf(fillPercentage);
+
+        // Generate combinations using greedy approach
+        // Try to find combinations with 2 positions first, then 3, etc.
+        for (int splitSize = 2; splitSize <= Math.min(4, partialMatches.size()); splitSize++) {
+            List<SplitSuggestionDTO> combinationsOfSize = findCombinations(
+                    partialMatches, targetPercentage, splitSize, 0, new ArrayList<>()
+            );
+            suggestions.addAll(combinationsOfSize);
+
+            // Limit total suggestions
+            if (suggestions.size() >= 5) {
+                break;
+            }
+        }
+
+        // Sort suggestions by split count (prefer fewer splits), then by total waste
+        suggestions.sort((a, b) -> {
+            int countCompare = Integer.compare(a.splitCount(), b.splitCount());
+            if (countCompare != 0) return countCompare;
+            return a.totalWasteAmount().compareTo(b.totalWasteAmount());
+        });
+
+        // Return top 5 suggestions
+        return suggestions.stream().limit(5).toList();
+    }
+
+    /**
+     * Recursively finds combinations of positions that sum to at least the target percentage.
+     */
+    private List<SplitSuggestionDTO> findCombinations(
+            List<PositionMatchDTO> positions,
+            BigDecimal targetPercentage,
+            int targetSize,
+            int startIndex,
+            List<PositionMatchDTO> current
+    ) {
+        List<SplitSuggestionDTO> results = new ArrayList<>();
+
+        if (current.size() == targetSize) {
+            BigDecimal totalAvailable = current.stream()
+                    .map(PositionMatchDTO::availablePercentage)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+            if (totalAvailable.compareTo(targetPercentage) >= 0) {
+                results.add(SplitSuggestionDTO.fromMatches(new ArrayList<>(current)));
+            }
+            return results;
+        }
+
+        for (int i = startIndex; i < positions.size() && results.size() < 3; i++) {
+            current.add(positions.get(i));
+            results.addAll(findCombinations(positions, targetPercentage, targetSize, i + 1, current));
+            current.remove(current.size() - 1);
+        }
+
+        return results;
     }
 
     /**

@@ -222,6 +222,50 @@ import { GradeValue } from '../admin/grade-values/grade-value.model';
                 </tr>
               </ng-template>
             </p-table>
+          } @else if (searchResult()!.splitSuggestions.length > 0) {
+            <div class="split-suggestions">
+              <div class="split-header">
+                <i class="pi pi-info-circle"></i>
+                <div>
+                  <h4>Keine einzelne Stelle verfügbar</h4>
+                  <p>
+                    Es wurde keine einzelne Stelle gefunden, die {{ searchResult()!.fillPercentage }}%
+                    aufnehmen kann. Folgende Aufteilungen auf mehrere Stellen sind möglich:
+                  </p>
+                </div>
+              </div>
+
+              @for (suggestion of searchResult()!.splitSuggestions; track $index) {
+                <div class="split-card">
+                  <div class="split-card-header">
+                    <p-tag
+                      [value]="suggestion.splitCount + ' Stellen'"
+                      [severity]="suggestion.splitCount === 2 ? 'success' : 'warn'"
+                    />
+                    <span class="split-total">
+                      Gesamt: {{ suggestion.totalAvailablePercentage | number: '1.0-0' }}% verfügbar
+                    </span>
+                    <span class="split-waste">
+                      Verlust: {{ suggestion.totalWasteAmount | currency: 'EUR' : 'symbol' : '1.0-0' }}
+                    </span>
+                  </div>
+                  <div class="split-positions">
+                    @for (pos of suggestion.positions; track pos.objectId) {
+                      <div class="split-position">
+                        <span class="split-pos-id">{{ pos.objectId }}</span>
+                        <span class="split-pos-grade">{{ pos.positionGrade }}</span>
+                        <span class="split-pos-available"
+                          >{{ pos.availablePercentage | number: '1.0-0' }}% verfügbar</span
+                        >
+                        @if (pos.objectDescription) {
+                          <span class="split-pos-desc">{{ pos.objectDescription }}</span>
+                        }
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
           } @else {
             <div class="no-results">
               <i class="pi pi-inbox"></i>
@@ -419,6 +463,108 @@ import { GradeValue } from '../admin/grade-values/grade-value.model';
 
       .hint {
         font-size: 0.875rem;
+      }
+    }
+
+    .split-suggestions {
+      padding: 1rem;
+    }
+
+    .split-header {
+      display: flex;
+      gap: 1rem;
+      align-items: flex-start;
+      padding: 1rem;
+      background: var(--p-blue-50);
+      border-radius: 8px;
+      margin-bottom: 1rem;
+
+      i {
+        font-size: 1.5rem;
+        color: var(--p-blue-500);
+        margin-top: 0.25rem;
+      }
+
+      h4 {
+        margin: 0 0 0.5rem;
+        color: var(--p-blue-700);
+      }
+
+      p {
+        margin: 0;
+        color: var(--p-text-muted-color);
+        font-size: 0.875rem;
+      }
+    }
+
+    .split-card {
+      border: 1px solid var(--p-surface-300);
+      border-radius: 8px;
+      margin-bottom: 0.75rem;
+      overflow: hidden;
+    }
+
+    .split-card-header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.75rem 1rem;
+      background: var(--p-surface-50);
+      border-bottom: 1px solid var(--p-surface-200);
+
+      .split-total {
+        font-weight: 500;
+        color: var(--p-text-color);
+      }
+
+      .split-waste {
+        color: var(--p-text-muted-color);
+        font-size: 0.875rem;
+        margin-left: auto;
+      }
+    }
+
+    .split-positions {
+      padding: 0.75rem 1rem;
+    }
+
+    .split-position {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid var(--p-surface-100);
+
+      &:last-child {
+        border-bottom: none;
+      }
+
+      .split-pos-id {
+        font-weight: 600;
+        min-width: 80px;
+      }
+
+      .split-pos-grade {
+        background: var(--p-primary-100);
+        color: var(--p-primary-700);
+        padding: 0.15rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.875rem;
+        font-weight: 500;
+      }
+
+      .split-pos-available {
+        color: var(--p-green-600);
+        font-weight: 500;
+      }
+
+      .split-pos-desc {
+        color: var(--p-text-muted-color);
+        font-size: 0.875rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        max-width: 300px;
       }
     }
 

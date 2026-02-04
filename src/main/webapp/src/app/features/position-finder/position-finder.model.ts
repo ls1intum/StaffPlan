@@ -26,10 +26,18 @@ export interface PositionMatch {
   warnings: string[];
 }
 
+export interface SplitSuggestion {
+  positions: PositionMatch[];
+  totalAvailablePercentage: number;
+  totalWasteAmount: number;
+  splitCount: number;
+}
+
 export interface PositionFinderResponse {
   employeeMonthlyCost: number;
   employeeGrade: string;
   fillPercentage: number;
   totalMatchesFound: number;
   matches: PositionMatch[];
+  splitSuggestions: SplitSuggestion[];
 }
