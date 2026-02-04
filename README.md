@@ -2,6 +2,8 @@
 
 Strategic Staff and Budget Planning - A web application for managing staff positions, research groups, and budget planning at research institutions.
 
+> **📖 New to StaffPlan?** Check out the [User Guide](docs/USER_GUIDE.md) for step-by-step instructions on using all features.
+
 ## Overview
 
 StaffPlan helps universities and research institutions:
@@ -11,8 +13,8 @@ StaffPlan helps universities and research institutions:
 - Plan budgets with salary grade calculations
 
 **Tech Stack:**
-- **Backend**: Spring Boot 4.0 (Java 25)
-- **Frontend**: Angular 21 (standalone components, signals)
+- **Server**: Spring Boot 4.0 (Java 25)
+- **Web App**: Angular 21 (standalone components, signals)
 - **Database**: PostgreSQL 18
 - **Authentication**: Keycloak 26 (OAuth2/OIDC)
 
@@ -79,7 +81,7 @@ docker compose ps
 docker compose logs -f keycloak
 ```
 
-#### Step 2: Start the Backend Server
+#### Step 2: Start the Server
 
 ```bash
 # From project root
@@ -88,7 +90,7 @@ docker compose logs -f keycloak
 
 The server starts at http://localhost:8080
 
-#### Step 3: Start the Frontend
+#### Step 3: Start the Web App
 
 ```bash
 # From project root
@@ -97,7 +99,7 @@ npm install    # First time only
 npm start
 ```
 
-The Angular dev server starts at http://localhost:4200
+The web app development server starts at http://localhost:4200
 
 ### First Login
 
@@ -188,7 +190,7 @@ StaffPlan/
 
 ## Development Guide
 
-### Backend Development (Spring Boot)
+### Server Development (Spring Boot)
 
 #### Running the Server
 
@@ -238,9 +240,9 @@ StaffPlan/
 5. Create REST controller in `web/`
 6. Add Liquibase migration in `resources/db/changelog/`
 
-### Frontend Development (Angular)
+### Web App Development (Angular)
 
-#### Running the Client
+#### Running the Web App
 
 ```bash
 cd src/main/webapp
@@ -248,7 +250,7 @@ cd src/main/webapp
 # Install dependencies (first time)
 npm install
 
-# Start dev server
+# Start development server
 npm start
 
 # Build for production
@@ -445,6 +447,8 @@ docker compose -f docker-compose-prod.yml push
 
 ## Troubleshooting
 
+This section covers common development setup issues. For user-facing issues, see the [User Guide FAQ](docs/USER_GUIDE.md#frequently-asked-questions).
+
 ### Common Issues
 
 #### Keycloak won't start
@@ -533,17 +537,24 @@ tail -f build/logs/spring.log
 
 ## Contributing
 
+Before submitting changes:
+
 1. Create a feature branch from `main`
-2. Make your changes following the code style guides
-3. Run tests: `./gradlew test` and `npm test`
-4. Run formatters: `./gradlew spotlessApply` and `npm run prettier:fix`
-5. Submit a pull request
+2. Make your changes following the code style guides above
+3. Run server tests: `./gradlew test`
+4. Run web app tests: `cd src/main/webapp && npm test`
+5. Apply code formatting:
+   - Server: `./gradlew spotlessApply`
+   - Web app: `cd src/main/webapp && npm run prettier:fix`
+6. Submit a pull request to `main`
 
 ## Documentation
 
-- **User Guide**: [docs/USER_GUIDE.md](docs/USER_GUIDE.md) - End-user documentation
-- **API Docs**: http://localhost:8080/swagger-ui.html (when running)
-- **AI Instructions**: [CLAUDE.md](CLAUDE.md) - For AI assistants
+| Document | Description |
+|----------|-------------|
+| **[User Guide](docs/USER_GUIDE.md)** | Step-by-step instructions for using StaffPlan (for all users) |
+| **[API Documentation](http://localhost:8080/swagger-ui.html)** | Interactive API explorer (available when server is running) |
+| **[CLAUDE.md](CLAUDE.md)** | Instructions for AI coding assistants |
 
 ## License
 

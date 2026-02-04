@@ -1,18 +1,20 @@
 # StaffPlan User Guide
 
-Welcome to StaffPlan, a web application for strategic staff and budget planning at research institutions. This guide will help you understand how to use StaffPlan effectively.
+Welcome to StaffPlan, a web application for strategic staff and budget planning at research institutions. This guide explains how to use all features of StaffPlan, from viewing positions to managing research groups.
+
+**Who is this guide for?** All StaffPlan users, including administrators, job managers, professors, and employees. Each section notes which roles have access to specific features.
 
 ## Table of Contents
 
-1. [Getting Started](#getting-started)
-2. [Understanding User Roles](#understanding-user-roles)
-3. [Positions Overview](#positions-overview)
-4. [Position Finder](#position-finder)
-5. [Research Group Management](#research-group-management)
-6. [User Management](#user-management)
-7. [Grade Value Management](#grade-value-management)
-8. [Importing Data](#importing-data)
-9. [Frequently Asked Questions](#frequently-asked-questions)
+1. [Getting Started](#getting-started) - How to log in and navigate the application
+2. [Understanding User Roles](#understanding-user-roles) - What each role can do
+3. [Positions Overview](#positions-overview) - Viewing and filtering staff positions
+4. [Position Finder](#position-finder) - Finding the best position matches
+5. [Research Group Management](#research-group-management) - Managing chairs and institutes
+6. [User Management](#user-management) - Managing users and their roles
+7. [Grade Value Management](#grade-value-management) - Configuring salary grades
+8. [Importing Data](#importing-data) - Uploading data from CSV files
+9. [Frequently Asked Questions](#frequently-asked-questions) - Common questions and answers
 
 ---
 
@@ -86,11 +88,11 @@ Employees have read-only access:
 
 ## Positions Overview
 
-The Positions page shows all staff positions in a visual timeline format (Gantt chart).
+The Positions page shows all staff positions in a visual timeline format called a Gantt chart. This gives you a quick overview of when positions start and end, how full they are, and which positions may need attention.
 
 ### Understanding the Gantt Chart
 
-The Gantt chart displays positions as horizontal bars over time:
+The Gantt chart displays positions as horizontal bars on a timeline. Each bar represents one position:
 
 - **Each row** represents a single position
 - **The bar length** shows the position's duration (start to end date)
@@ -130,7 +132,13 @@ Each position shows:
 
 ## Position Finder
 
-The Position Finder helps you find the best position matches for an employee based on their requirements.
+The Position Finder helps you find available positions that match an employee's requirements. This is useful when you need to place a new employee or extend an existing contract.
+
+**When to use Position Finder:**
+- Hiring a new PhD student or postdoc
+- Extending an employee's contract
+- Finding positions for employees whose current positions are ending
+- Exploring available capacity in specific research areas
 
 ### How to Search
 
@@ -440,9 +448,20 @@ A: Your login session has timed out. Simply refresh the page and log in again.
 
 If you encounter issues not covered in this guide:
 
-1. **Technical issues**: Contact your IT department
-2. **Access requests**: Ask your supervisor or administrator
-3. **Bug reports**: Report issues through your institution's ticketing system
+| Issue Type | Who to Contact |
+|------------|----------------|
+| **Cannot log in** | Your IT department or helpdesk |
+| **Need access to a feature** | Your supervisor or a StaffPlan administrator |
+| **Found a bug or error** | Report through your institution's ticketing system |
+| **Need a new role assigned** | Contact a StaffPlan administrator |
+| **Data looks incorrect** | Contact your Job Manager or administrator |
+
+### Quick Tips
+
+- **Bookmark the application**: Save the StaffPlan URL for easy access
+- **Use filters**: If pages load slowly, use filters to reduce the displayed data
+- **Check your role**: If you cannot see expected features, verify your role is correct with an administrator
+- **Clear browser cache**: If you experience display issues, try clearing your browser's cache and cookies
 
 ---
 
