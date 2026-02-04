@@ -419,13 +419,13 @@ type ZoomLevel = 3 | 6 | 12 | 24 | 36 | 60;
       white-space: nowrap;
     }
 
-    /* Filter Date Marker (blue) */
+    /* Filter Date Marker (green) */
     .filter-date-marker {
       position: absolute;
       top: 0;
       bottom: 0;
       width: 2px;
-      background: #3b82f6;
+      background: #22c55e;
       z-index: 9;
       pointer-events: none;
 
@@ -438,8 +438,8 @@ type ZoomLevel = 3 | 6 | 12 | 24 | 36 | 60;
         height: 100%;
         background: repeating-linear-gradient(
           to bottom,
-          #3b82f6 0px,
-          #3b82f6 4px,
+          #22c55e 0px,
+          #22c55e 4px,
           transparent 4px,
           transparent 8px
         );
@@ -452,7 +452,7 @@ type ZoomLevel = 3 | 6 | 12 | 24 | 36 | 60;
       left: 50%;
       transform: translateX(-50%);
       font-size: 0.65rem;
-      color: #3b82f6;
+      color: #22c55e;
       font-weight: 600;
       white-space: nowrap;
     }
