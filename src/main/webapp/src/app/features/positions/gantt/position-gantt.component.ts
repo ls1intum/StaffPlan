@@ -419,6 +419,44 @@ type ZoomLevel = 3 | 6 | 12 | 24 | 36 | 60;
       white-space: nowrap;
     }
 
+    /* Filter Date Marker (blue) */
+    .filter-date-marker {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: #3b82f6;
+      z-index: 9;
+      pointer-events: none;
+
+      &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -1px;
+        width: 4px;
+        height: 100%;
+        background: repeating-linear-gradient(
+          to bottom,
+          #3b82f6 0px,
+          #3b82f6 4px,
+          transparent 4px,
+          transparent 8px
+        );
+      }
+    }
+
+    .filter-date-label {
+      position: absolute;
+      top: -18px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.65rem;
+      color: #3b82f6;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
     /* Row */
     .gantt-row {
       display: flex;
@@ -829,6 +867,41 @@ export class PositionGanttComponent {
     const daysFromStart = this.daysBetween(range.start, now);
 
     return (daysFromStart / totalDays) * 100;
+  });
+
+  // Computed: filter date marker position (only shown when different from today)
+  readonly filterDateMarkerPosition = computed((): number | null => {
+    if (!this.showOnlyUnfilled()) {
+      return null;
+    }
+
+    const range = this.visibleDateRange();
+    const filterDate = this.filterDate();
+    const today = this.today();
+
+    // Only show if filter date is different from today (by more than 1 day)
+    const daysDiff = Math.abs(filterDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24);
+    if (daysDiff < 1) {
+      return null;
+    }
+
+    if (filterDate < range.start || filterDate > range.end) {
+      return null;
+    }
+
+    const totalDays = this.daysBetween(range.start, range.end);
+    const daysFromStart = this.daysBetween(range.start, filterDate);
+
+    return (daysFromStart / totalDays) * 100;
+  });
+
+  // Computed: formatted filter date for label
+  readonly filterDateLabel = computed((): string => {
+    return this.filterDate().toLocaleDateString('de-DE', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    });
   });
 
   // Computed: year headers (calculated from months to ensure alignment)

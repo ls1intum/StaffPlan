@@ -173,6 +173,14 @@
         <span class="today-label">Heute</span>
       </div>
     }
+    @if (filterDateMarkerPosition() !== null) {
+      <div
+        class="filter-date-marker"
+        [style.left]="'calc(320px + (100% - 320px) * ' + filterDateMarkerPosition() + ' / 100)'"
+      >
+        <span class="filter-date-label">{{ filterDateLabel() }}</span>
+      </div>
+    }
 
     <cdk-virtual-scroll-viewport [itemSize]="rowHeight" class="gantt-viewport">
       <div
