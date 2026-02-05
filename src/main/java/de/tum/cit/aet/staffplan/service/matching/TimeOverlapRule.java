@@ -28,16 +28,24 @@ public class TimeOverlapRule implements MatchingRule {
 
     @Override
     public double evaluate(MatchingContext ctx) {
-        long overlapDays = ctx.overlapDays();
         long requestedDays = ctx.requestedDays();
-
-        // No overlap at all - exclude this position
-        if (overlapDays <= 0) {
-            return -1;
-        }
 
         // If requested days is 0 or negative (invalid), exclude
         if (requestedDays <= 0) {
+            return -1;
+        }
+
+        // If position has availability (assignment ended or never started during search period),
+        // it's fully available for the search period - full overlap score
+        if (ctx.availablePercentage().compareTo(ctx.requestedPercentage()) >= 0) {
+            // Position can accommodate the request, consider it as full time overlap
+            return 100.0;
+        }
+
+        long overlapDays = ctx.overlapDays();
+
+        // No overlap at all - exclude this position
+        if (overlapDays <= 0) {
             return -1;
         }
 

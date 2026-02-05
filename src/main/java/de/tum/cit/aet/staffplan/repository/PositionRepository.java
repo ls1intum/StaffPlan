@@ -26,37 +26,33 @@ public interface PositionRepository extends JpaRepository<Position, UUID> {
 
     /**
      * Finds candidate positions for matching.
-     * Returns positions that have time overlap with the requested period and have a valid grade.
+     * Returns all positions with a valid grade that could potentially be available.
+     * The availability calculation is done in Java to handle complex date logic.
      * Excludes placeholder rows (personnel_number = '00000000').
      *
-     * @param startDate       the requested start date (inclusive)
-     * @param endDate         the requested end date (inclusive)
      * @param researchGroupId optional research group filter
      * @param relevanceTypes  optional relevance type filter
      * @return matching positions ordered by grade and start date
      */
     @Query("""
             SELECT p FROM Position p
-            WHERE (p.startDate IS NULL OR p.startDate <= :endDate)
-              AND (p.endDate IS NULL OR p.endDate >= :startDate)
-              AND p.tariffGroup IS NOT NULL AND p.tariffGroup <> ''
+            WHERE p.tariffGroup IS NOT NULL AND p.tariffGroup <> ''
               AND (p.personnelNumber IS NULL OR p.personnelNumber <> '00000000')
               AND (:researchGroupId IS NULL OR p.researchGroup.id = :researchGroupId)
               AND (:relevanceTypes IS NULL OR p.positionRelevanceType IN :relevanceTypes)
             ORDER BY p.tariffGroup, p.startDate
             """)
     List<Position> findCandidatePositions(
-            @Param("startDate") LocalDate startDate,
-            @Param("endDate") LocalDate endDate,
             @Param("researchGroupId") UUID researchGroupId,
             @Param("relevanceTypes") List<String> relevanceTypes);
 
     /**
-     * Counts the number of assignments (occupied entries) for a position based on personnel number.
+     * Counts the number of assignments (occupied entries) for a position at a specific date.
      * Excludes placeholder rows (personnel_number = '00000000').
      *
-     * @param objectId the position object ID
-     * @return the number of assigned entries for the position
+     * @param objectId      the position object ID
+     * @param referenceDate the date to check (typically the start of the search period)
+     * @return the number of active assignments at that date
      */
     @Query("""
             SELECT COUNT(p) FROM Position p
@@ -64,15 +60,20 @@ public interface PositionRepository extends JpaRepository<Position, UUID> {
               AND p.personnelNumber IS NOT NULL
               AND p.personnelNumber <> ''
               AND p.personnelNumber <> '00000000'
+              AND (p.startDate IS NULL OR p.startDate <= :referenceDate)
+              AND (p.endDate IS NULL OR p.endDate >= :referenceDate)
             """)
-    int countAssignmentsByObjectId(@Param("objectId") String objectId);
+    int countAssignmentsAtDate(
+            @Param("objectId") String objectId,
+            @Param("referenceDate") LocalDate referenceDate);
 
     /**
-     * Calculates the total assigned percentage for a position.
+     * Calculates the total assigned percentage for a position at a specific date.
      * Excludes placeholder rows (personnel_number = '00000000').
      *
-     * @param objectId the position object ID
-     * @return the total assigned percentage, or 0 if none
+     * @param objectId      the position object ID
+     * @param referenceDate the date to check (typically the start of the search period)
+     * @return the total assigned percentage at that date, or 0 if none
      */
     @Query("""
             SELECT COALESCE(SUM(p.percentage), 0) FROM Position p
@@ -80,8 +81,12 @@ public interface PositionRepository extends JpaRepository<Position, UUID> {
               AND p.personnelNumber IS NOT NULL
               AND p.personnelNumber <> ''
               AND p.personnelNumber <> '00000000'
+              AND (p.startDate IS NULL OR p.startDate <= :referenceDate)
+              AND (p.endDate IS NULL OR p.endDate >= :referenceDate)
             """)
-    java.math.BigDecimal sumAssignedPercentageByObjectId(@Param("objectId") String objectId);
+    java.math.BigDecimal sumAssignedPercentageAtDate(
+            @Param("objectId") String objectId,
+            @Param("referenceDate") LocalDate referenceDate);
 
     /**
      * Returns all distinct position relevance types.

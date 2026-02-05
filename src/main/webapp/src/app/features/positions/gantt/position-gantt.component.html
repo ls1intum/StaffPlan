@@ -27,21 +27,23 @@
         filterPlaceholder="Suchen..."
       />
     </div>
-    <div class="filter-item">
-      <label for="department">Org.-Einheit</label>
-      <p-select
-        id="department"
-        styleClass="filter-select-wide"
-        panelStyleClass="compact-dropdown"
-        [options]="departmentOptions()"
-        [ngModel]="filterDepartment()"
-        (ngModelChange)="filterDepartment.set($event)"
-        placeholder="Alle"
-        [showClear]="true"
-        [filter]="true"
-        filterPlaceholder="Suchen..."
-      />
-    </div>
+    @if (canManage()) {
+      <div class="filter-item">
+        <label for="department">Org.-Einheit</label>
+        <p-select
+          id="department"
+          styleClass="filter-select-wide"
+          panelStyleClass="compact-dropdown"
+          [options]="departmentOptions()"
+          [ngModel]="filterDepartment()"
+          (ngModelChange)="filterDepartment.set($event)"
+          placeholder="Alle"
+          [showClear]="true"
+          [filter]="true"
+          filterPlaceholder="Suchen..."
+        />
+      </div>
+    }
     <div class="filter-item">
       <label for="qualification">Qualifikation</label>
       <p-select

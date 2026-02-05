@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDate;
 import java.util.*;
 
 @Slf4j
@@ -63,10 +64,8 @@ public class PositionFinderService {
             relevanceTypes = null;
         }
 
-        // Find candidate positions
+        // Find candidate positions (date filtering is done in Java for complex availability logic)
         List<Position> candidates = positionRepository.findCandidatePositions(
-                request.startDate(),
-                request.endDate(),
                 request.researchGroupId(),
                 relevanceTypes);
 
@@ -109,15 +108,23 @@ public class PositionFinderService {
 
             GradeValue positionGradeValue = positionGradeOpt.get();
 
-            // Get assignment info
-            int assignmentCount = positionRepository.countAssignmentsByObjectId(objectId);
-            BigDecimal assignedPercentage = positionRepository.sumAssignedPercentageByObjectId(objectId);
-            if (assignedPercentage == null) {
-                assignedPercentage = BigDecimal.ZERO;
-            }
+            // Get all positions for this objectId to calculate availability across the entire period
+            List<Position> positionsForObjectId = positionsByObjectId.get(objectId);
+            AvailabilityInfo availability = calculateMinAvailabilityInPeriod(
+                    positionsForObjectId,
+                    request.startDate(),
+                    request.endDate()
+            );
 
-            // Calculate available percentage (100% - assigned)
-            BigDecimal availablePercentage = BigDecimal.valueOf(100).subtract(assignedPercentage);
+            BigDecimal availablePercentage = availability.minAvailablePercentage();
+            int assignmentCount = availability.maxAssignmentCount();
+            BigDecimal assignedPercentage = BigDecimal.valueOf(100).subtract(availablePercentage);
+
+            // Debug: log details for first few positions
+            if (processedObjectIds.size() <= 3) {
+                log.info("Position {} (grade {}): minAvailable={}%, maxAssignments={}",
+                        objectId, position.getTariffGroup(), availablePercentage, assignmentCount);
+            }
 
             // Calculate position budget based on AVAILABLE percentage
             BigDecimal positionBudget = calculatePositionBudgetForPercentage(positionGradeValue, availablePercentage);
@@ -220,7 +227,9 @@ public class PositionFinderService {
             splitSuggestions = generateSplitSuggestions(
                     candidates,
                     employeeGradeValue,
-                    fillPercentage
+                    fillPercentage,
+                    request.startDate(),
+                    request.endDate()
             );
             log.info("Generated {} split suggestions", splitSuggestions.size());
         }
@@ -258,13 +267,24 @@ public class PositionFinderService {
 
     /**
      * Generates split suggestions when no single position can accommodate the full request.
-     * Finds combinations of positions that together can satisfy the requested percentage.
+     * Finds combinations of positions that together can satisfy the requested percentage
+     * for the ENTIRE search period.
      */
     private List<SplitSuggestionDTO> generateSplitSuggestions(
             List<Position> candidates,
             GradeValue employeeGradeValue,
-            int fillPercentage
+            int fillPercentage,
+            LocalDate startDate,
+            LocalDate endDate
     ) {
+        // Group candidates by objectId
+        Map<String, List<Position>> positionsByObjectId = new HashMap<>();
+        for (Position position : candidates) {
+            if (position.getObjectId() != null) {
+                positionsByObjectId.computeIfAbsent(position.getObjectId(), k -> new ArrayList<>()).add(position);
+            }
+        }
+
         // Collect all positions with any available capacity that match the grade
         List<PositionMatchDTO> partialMatches = new ArrayList<>();
         Set<String> seenObjectIds = new HashSet<>();
@@ -290,19 +310,17 @@ public class PositionFinderService {
                 continue;
             }
 
-            // Get available percentage
-            BigDecimal assignedPercentage = positionRepository.sumAssignedPercentageByObjectId(objectId);
-            if (assignedPercentage == null) {
-                assignedPercentage = BigDecimal.ZERO;
-            }
-            BigDecimal availablePercentage = BigDecimal.valueOf(100).subtract(assignedPercentage);
+            // Get minimum available percentage across the entire period
+            List<Position> positionsForObjectId = positionsByObjectId.get(objectId);
+            AvailabilityInfo availability = calculateMinAvailabilityInPeriod(positionsForObjectId, startDate, endDate);
+            BigDecimal availablePercentage = availability.minAvailablePercentage();
 
             // Skip if no availability
             if (availablePercentage.compareTo(BigDecimal.ZERO) <= 0) {
                 continue;
             }
 
-            int assignmentCount = positionRepository.countAssignmentsByObjectId(objectId);
+            int assignmentCount = availability.maxAssignmentCount();
 
             // Calculate budget and waste for this partial position
             BigDecimal positionBudget = calculatePositionBudgetForPercentage(positionGradeValue, availablePercentage);
@@ -455,5 +473,100 @@ public class PositionFinderService {
         // Handle cases like "E13A" or "E13B" -> keep as is (these are distinct grades)
         // Handle cases like "E9A" vs "E9a" -> normalize to uppercase (already done)
         return normalized;
+    }
+
+    /**
+     * Record to hold availability info for a position during a time period.
+     */
+    private record AvailabilityInfo(BigDecimal minAvailablePercentage, int maxAssignmentCount) {}
+
+    /**
+     * Calculates the minimum availability across the entire time period by analyzing all time slices.
+     * The position must have sufficient availability for the ENTIRE period to be a valid match.
+     *
+     * @param positionsForObjectId all position rows for this objectId
+     * @param startDate            search period start
+     * @param endDate              search period end
+     * @return availability info with minimum available percentage across the period
+     */
+    private AvailabilityInfo calculateMinAvailabilityInPeriod(
+            List<Position> positionsForObjectId,
+            LocalDate startDate,
+            LocalDate endDate
+    ) {
+        // Collect all assignments (rows with personnel number, excluding placeholders)
+        List<Position> assignments = positionsForObjectId.stream()
+                .filter(p -> p.getPersonnelNumber() != null
+                        && !p.getPersonnelNumber().isEmpty()
+                        && !p.getPersonnelNumber().equals("00000000"))
+                .toList();
+
+        if (assignments.isEmpty()) {
+            // No assignments = 100% available for the entire period
+            return new AvailabilityInfo(BigDecimal.valueOf(100), 0);
+        }
+
+        // Collect all boundary dates within the search period
+        TreeSet<LocalDate> boundaries = new TreeSet<>();
+        boundaries.add(startDate);
+        boundaries.add(endDate);
+
+        for (Position a : assignments) {
+            LocalDate aStart = a.getStartDate() != null ? a.getStartDate() : LocalDate.MIN;
+            LocalDate aEnd = a.getEndDate() != null ? a.getEndDate() : LocalDate.MAX;
+
+            // Add boundary if within search period
+            if (!aStart.isBefore(startDate) && !aStart.isAfter(endDate)) {
+                boundaries.add(aStart);
+            }
+            if (!aEnd.isBefore(startDate) && !aEnd.isAfter(endDate)) {
+                boundaries.add(aEnd);
+            }
+            // Also add day after end date as a boundary (when availability changes)
+            LocalDate dayAfterEnd = aEnd.plusDays(1);
+            if (!dayAfterEnd.isBefore(startDate) && !dayAfterEnd.isAfter(endDate)) {
+                boundaries.add(dayAfterEnd);
+            }
+        }
+
+        // For each time slice, calculate assigned percentage and track the MINIMUM availability
+        BigDecimal minAvailable = BigDecimal.valueOf(100);
+        int maxAssignmentCount = 0;
+
+        List<LocalDate> boundaryList = new ArrayList<>(boundaries);
+        for (int i = 0; i < boundaryList.size() - 1; i++) {
+            LocalDate sliceStart = boundaryList.get(i);
+
+            // Use slice start date for checking which assignments are active
+            LocalDate checkDate = sliceStart;
+
+            // Sum assigned percentage for this slice
+            BigDecimal assignedSum = BigDecimal.ZERO;
+            int assignmentCount = 0;
+            for (Position a : assignments) {
+                LocalDate aStart = a.getStartDate() != null ? a.getStartDate() : LocalDate.MIN;
+                LocalDate aEnd = a.getEndDate() != null ? a.getEndDate() : LocalDate.MAX;
+
+                if (!aStart.isAfter(checkDate) && !aEnd.isBefore(checkDate)) {
+                    assignedSum = assignedSum.add(a.getPercentage() != null ? a.getPercentage() : BigDecimal.ZERO);
+                    assignmentCount++;
+                }
+            }
+
+            BigDecimal available = BigDecimal.valueOf(100).subtract(assignedSum);
+            if (available.compareTo(BigDecimal.ZERO) < 0) {
+                available = BigDecimal.ZERO;
+            }
+
+            // Track minimum availability (worst case across the period)
+            if (available.compareTo(minAvailable) < 0) {
+                minAvailable = available;
+            }
+            if (assignmentCount > maxAssignmentCount) {
+                maxAssignmentCount = assignmentCount;
+            }
+        }
+
+        return new AvailabilityInfo(minAvailable, maxAssignmentCount);
     }
 }
