@@ -2,7 +2,9 @@
 
 Strategic Staff and Budget Planning - A web application for managing staff positions, research groups, and budget planning at research institutions.
 
-> **📖 New to StaffPlan?** Check out the [User Guide](docs/USER_GUIDE.md) for step-by-step instructions on using all features.
+> **📖 New to StaffPlan?** Check out the User Guide for step-by-step instructions on using all features:
+> - [English](docs/USER_GUIDE.md)
+> - [Deutsch](docs/USER_GUIDE_DE.md)
 
 ## Overview
 
@@ -182,7 +184,8 @@ StaffPlan/
 │   │           └── shared/         # Shared components
 │   └── test/                       # Tests
 ├── docs/
-│   └── USER_GUIDE.md               # End-user documentation
+│   ├── USER_GUIDE.md               # End-user documentation (English)
+│   └── USER_GUIDE_DE.md            # Benutzerhandbuch (Deutsch)
 ├── build.gradle                    # Gradle build configuration
 ├── CLAUDE.md                       # AI assistant instructions
 └── README.md                       # This file
@@ -447,7 +450,7 @@ docker compose -f docker-compose-prod.yml push
 
 ## Troubleshooting
 
-This section covers common development setup issues. For user-facing issues, see the [User Guide FAQ](docs/USER_GUIDE.md#frequently-asked-questions).
+This section covers common development setup issues. For user-facing issues, see the User Guide FAQ ([English](docs/USER_GUIDE.md#frequently-asked-questions) | [Deutsch](docs/USER_GUIDE_DE.md#häufig-gestellte-fragen)).
 
 ### Common Issues
 
@@ -552,7 +555,8 @@ Before submitting changes:
 
 | Document | Description |
 |----------|-------------|
-| **[User Guide](docs/USER_GUIDE.md)** | Step-by-step instructions for using StaffPlan (for all users) |
+| **[User Guide (English)](docs/USER_GUIDE.md)** | Step-by-step instructions for using StaffPlan |
+| **[Benutzerhandbuch (Deutsch)](docs/USER_GUIDE_DE.md)** | Schritt-für-Schritt-Anleitung für die Nutzung von StaffPlan |
 | **[API Documentation](http://localhost:8080/swagger-ui.html)** | Interactive API explorer (available when server is running) |
 | **[CLAUDE.md](CLAUDE.md)** | Instructions for AI coding assistants |
 
