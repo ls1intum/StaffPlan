@@ -35,6 +35,9 @@ After logging in, you will see:
 - **User menu** in the top-right corner showing your name and role
 - **Main content area** displaying the current page
 
+![Positions Overview](images/positions-overview.png)
+*The Positions Overview showing the Gantt chart timeline view*
+
 The menu items you see depend on your assigned role:
 
 | Role | Available Menu Items |
@@ -152,6 +155,9 @@ The Position Finder helps you find available positions that match an employee's 
    - **Relevance Type** (optional): Filter by specific position categories
 3. Click **Search**
 
+![Position Finder Search Form](images/position-finder-form.png)
+*The Position Finder search form with all filter options*
+
 ### How the Search Algorithm Works
 
 The Position Finder uses a sophisticated matching algorithm to find the best available positions for your needs. Here's how it works in simple terms:
@@ -230,6 +236,9 @@ The system returns up to 8 suggestions, preferring:
 - Minimal excess (100% total better than 120% total)
 
 ### Understanding Results
+
+![Position Finder Results](images/position-finder-results.png)
+*Search results showing matching positions with quality ratings, availability, and budget information*
 
 The search results show matching positions sorted by their overall score:
 
