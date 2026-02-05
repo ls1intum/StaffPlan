@@ -378,6 +378,16 @@ The realm is auto-imported from `docker/keycloak/staffplan-realm.json` containin
 - Client configurations (`staffplan-client`, `staffplan-service-client`)
 - Test users with roles
 - Role definitions
+- Session timeout settings
+
+#### Session Timeouts
+
+| Setting | Value | Description |
+|---------|-------|-------------|
+| SSO Session Idle | 30 days | Time before inactive session expires |
+| SSO Session Max | 30 days | Maximum session lifetime |
+| Access Token Lifespan | 30 minutes | JWT token validity (auto-refreshed) |
+| Offline Session | 30 days | For "remember me" functionality |
 
 To modify Keycloak:
 1. Make changes in `staffplan-realm.json`
