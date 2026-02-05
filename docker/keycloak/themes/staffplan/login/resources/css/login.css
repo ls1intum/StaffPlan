@@ -1,0 +1,216 @@
+/* StaffPlan Keycloak Theme - Based on TUM AET production theme */
+
+/* Global Styles */
+body, html {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+  min-height: 0;
+  font-size: 14px;
+  color: rgba(0, 0, 0, 0.87);
+  margin: 0;
+  height: 100%;
+  font-family: Apple-System, Arial, Helvetica, sans-serif;
+}
+
+/* Main Container */
+.login-content {
+  background-size: cover;
+  background-position: center;
+  min-height: 100%;
+  min-width: 320px;
+  display: flex;
+  justify-content: top;
+  margin-top: 10rem;
+  align-items: center;
+  flex-direction: column;
+  background-color: #ffffff;
+}
+
+/* Login Box */
+.login-content .box {
+  width: 80%;
+  max-width: 400px;
+  border-radius: 8px;
+  background-color: #ffffff;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  text-align: center;
+}
+
+.login-content .box h2 {
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: #154a84;
+  margin: 0.5rem 0 1.5rem 0;
+}
+
+/* Logo Container */
+.logo-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.logo-container img {
+  max-height: 50px;
+  margin: 0 10px;
+}
+
+/* Form */
+.login-content .box .form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Input Container */
+.login-content .box .input-container {
+  width: 100%;
+  margin-bottom: 20px;
+  text-align: left;
+}
+
+.login-content .box .input-container label {
+  font-weight: bold;
+  font-size: 14px;
+  color: #000;
+  display: block;
+  margin-bottom: 5px;
+}
+
+.login-content .box .login-field,
+.login-content .box .submit,
+button,
+input[type="submit"],
+input[type="button"] {
+  width: 100%;
+  padding: 10px;
+  font-size: 14px;
+  margin-top: 5px;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+.login-content .box .login-field {
+  border: 1px solid #ddd;
+}
+
+.login-content .box .login-field:focus {
+  border-color: #154a84;
+  outline: none;
+}
+
+.login-content .box .submit,
+button,
+input[type="submit"],
+input[type="button"] {
+  background-color: #154a84;
+  color: #ffffff !important;
+  font-weight: bold;
+  border: none;
+  cursor: pointer;
+  margin-top: 20px;
+  text-decoration: none;
+}
+
+.login-content .box .submit:hover,
+button:hover,
+input[type="submit"]:hover,
+input[type="button"]:hover {
+  background-color: #0d3a6a;
+  color: #ffffff !important;
+  text-decoration: none;
+}
+
+/* Passkey Button */
+.passkey-button {
+  margin-top: 15px;
+}
+
+#authenticateWebAuthnButton {
+  display: block;
+  width: 100%;
+  padding: 10px;
+  font-size: 14px;
+  font-weight: bold;
+  border-radius: 4px;
+  background-color: #ffffff !important;
+  color: #154a84 !important;
+  border: 2px solid #154a84 !important;
+  cursor: pointer;
+  text-decoration: none;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+#authenticateWebAuthnButton:hover {
+  background-color: #f0f4f8 !important;
+  text-decoration: none;
+}
+
+/* Footer Links */
+.login-content .box .footer-links {
+  margin-top: 20px;
+  font-size: 12px;
+  color: #777;
+}
+
+.login-content .box .footer-links a {
+  color: #154a84;
+  text-decoration: none;
+  margin: 0 5px;
+}
+
+.login-content .box .footer-links a:hover {
+  text-decoration: underline;
+}
+
+/* Message Text / Alerts */
+.message-text {
+  font-size: 14px;
+  color: #b8082a;
+  margin-top: 20px;
+  text-align: left;
+}
+
+.alert {
+  margin-top: 10px;
+  padding: 10px;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.alert-error {
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+}
+
+/* Help Link */
+.help-link {
+  margin-top: 20px;
+  font-size: 12px;
+  text-align: center;
+}
+
+.help-link a {
+  color: #9a9797;
+  text-decoration: none;
+}
+
+.help-link a:hover {
+  color: #808080;
+  text-decoration: underline;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .login-content {
+    margin-top: 2rem;
+  }
+  .login-content .box {
+    margin: 1rem;
+    padding: 1.5rem;
+  }
+}

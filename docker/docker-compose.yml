@@ -38,6 +38,7 @@ services:
       - "8081:8081"
     volumes:
       - ./keycloak/staffplan-realm.json:/opt/keycloak/data/import/staffplan-realm.json:ro
+      - ./keycloak/themes/staffplan:/opt/keycloak/themes/staffplan:ro
     depends_on:
       postgres:
         condition: service_healthy
