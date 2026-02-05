@@ -29,10 +29,28 @@ public class PositionFinderService {
     private final List<MatchingRule> matchingRules;
 
     /**
-     * Finds positions matching the given criteria.
+     * Finds positions that can accommodate an employee with the specified grade and percentage
+     * for the entire requested time period.
+     * <p>
+     * The matching process works as follows:
+     * <ol>
+     *   <li>Fetch all candidate positions (filtered by research group and relevance types if specified)</li>
+     *   <li>Group positions by objectId to handle multiple assignment rows per position</li>
+     *   <li>For each unique position, calculate the minimum available percentage across the entire
+     *       search period using time-slice analysis</li>
+     *   <li>Filter positions that have sufficient availability for the entire period</li>
+     *   <li>Apply matching rules (budget efficiency, time overlap, etc.) to score and rank positions</li>
+     *   <li>If no single position matches, generate split suggestions combining multiple positions</li>
+     * </ol>
+     * <p>
+     * A position is considered available if its assignment ended before the search period starts,
+     * or if it has unassigned capacity during the entire search period.
      *
-     * @param request the position finder request
-     * @return matching positions with optional split suggestions
+     * @param request the position finder request containing employee grade, percentage, date range,
+     *                and optional filters (research group, relevance types)
+     * @return response containing matching positions sorted by score, or split suggestions if no
+     *         single position can accommodate the full request
+     * @throws IllegalArgumentException if required parameters are missing or invalid
      */
     public PositionFinderResponseDTO findPositions(PositionFinderRequestDTO request) {
         // Validate request
@@ -244,6 +262,13 @@ public class PositionFinderService {
         );
     }
 
+    /**
+     * Calculates the monthly cost for an employee based on their grade and employment percentage.
+     *
+     * @param gradeValue the grade value containing the base monthly salary
+     * @param percentage the employment percentage (1-100)
+     * @return the prorated monthly cost, or zero if the grade has no monthly value
+     */
     private BigDecimal calculateMonthlyCost(GradeValue gradeValue, int percentage) {
         BigDecimal monthlyValue = gradeValue.getMonthlyValue();
         if (monthlyValue == null) {
@@ -253,6 +278,13 @@ public class PositionFinderService {
                 .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
     }
 
+    /**
+     * Calculates the budget available on a position based on its grade and available percentage.
+     *
+     * @param gradeValue the grade value containing the base monthly salary for this position
+     * @param percentage the available percentage on the position (0-100)
+     * @return the prorated monthly budget, or zero if the grade has no monthly value
+     */
     private BigDecimal calculatePositionBudgetForPercentage(GradeValue gradeValue, BigDecimal percentage) {
         BigDecimal monthlyValue = gradeValue.getMonthlyValue();
         if (monthlyValue == null) {
@@ -267,8 +299,23 @@ public class PositionFinderService {
 
     /**
      * Generates split suggestions when no single position can accommodate the full request.
-     * Finds combinations of positions that together can satisfy the requested percentage
-     * for the ENTIRE search period.
+     * <p>
+     * This method finds combinations of 2, 3, or 4 positions that together can satisfy
+     * the requested employment percentage for the entire search period. Each position in
+     * the combination must have availability for the full period (not just partial overlap).
+     * <p>
+     * The suggestions are sorted by:
+     * <ol>
+     *   <li>Number of positions (fewer splits preferred)</li>
+     *   <li>Minimal excess percentage (closest match to requested percentage)</li>
+     * </ol>
+     *
+     * @param candidates         all candidate position rows from the database
+     * @param employeeGradeValue the employee's grade value for budget comparison
+     * @param fillPercentage     the requested employment percentage
+     * @param startDate          the search period start date
+     * @param endDate            the search period end date
+     * @return up to 8 split suggestions, or empty list if no valid combinations exist
      */
     private List<SplitSuggestionDTO> generateSplitSuggestions(
             List<Position> candidates,
@@ -381,8 +428,17 @@ public class PositionFinderService {
     }
 
     /**
-     * Finds the top combinations of exactly n positions that meet the target percentage,
-     * sorted by minimal excess (over-allocation).
+     * Finds the top combinations of exactly n positions that meet the target percentage.
+     * <p>
+     * Generates all possible combinations of the specified size, filters those that meet
+     * or exceed the target percentage, and returns the top results sorted by minimal
+     * excess (to avoid over-allocation).
+     *
+     * @param positions        list of positions with partial availability
+     * @param targetPercentage the minimum total percentage required
+     * @param n                the exact number of positions per combination
+     * @param maxResults       maximum number of combinations to return
+     * @return list of split suggestions, sorted by minimal excess percentage
      */
     private List<SplitSuggestionDTO> findTopCombinations(
             List<PositionMatchDTO> positions,
@@ -417,8 +473,17 @@ public class PositionFinderService {
     }
 
     /**
-     * Generates all combinations of size k from the given list.
-     * Limited to first 100 positions to avoid combinatorial explosion.
+     * Generates all combinations of size k from the given list using recursive backtracking.
+     * <p>
+     * To prevent performance issues with large datasets:
+     * <ul>
+     *   <li>Input is limited to first 100 positions</li>
+     *   <li>Total combinations are capped at 10,000</li>
+     * </ul>
+     *
+     * @param positions list of positions to combine
+     * @param k         the size of each combination
+     * @return list of all valid combinations (up to limits)
      */
     private List<List<PositionMatchDTO>> generateCombinations(List<PositionMatchDTO> positions, int k) {
         List<List<PositionMatchDTO>> result = new ArrayList<>();
@@ -476,18 +541,39 @@ public class PositionFinderService {
     }
 
     /**
-     * Record to hold availability info for a position during a time period.
+     * Holds availability information for a position during a specific time period.
+     *
+     * @param minAvailablePercentage the minimum available percentage across all time slices in the period
+     *                               (represents the worst-case availability)
+     * @param maxAssignmentCount     the maximum number of concurrent assignments at any point in the period
      */
     private record AvailabilityInfo(BigDecimal minAvailablePercentage, int maxAssignmentCount) {}
 
     /**
-     * Calculates the minimum availability across the entire time period by analyzing all time slices.
-     * The position must have sufficient availability for the ENTIRE period to be a valid match.
+     * Calculates the minimum availability across the entire time period using time-slice analysis.
+     * <p>
+     * This method implements the same logic as the Gantt chart's gap detection:
+     * <ol>
+     *   <li>Identify all boundary dates where availability changes (assignment starts/ends)</li>
+     *   <li>Create time slices between consecutive boundaries</li>
+     *   <li>For each slice, calculate total assigned percentage from active assignments</li>
+     *   <li>Track the minimum availability (worst case) across all slices</li>
+     * </ol>
+     * <p>
+     * A position is considered fully available (100%) if:
+     * <ul>
+     *   <li>It has no assignments at all, or</li>
+     *   <li>All assignments ended before the search period starts</li>
+     * </ul>
+     * <p>
+     * This ensures that a position is only matched if it can accommodate the employee
+     * for the ENTIRE requested period, not just part of it.
      *
-     * @param positionsForObjectId all position rows for this objectId
-     * @param startDate            search period start
-     * @param endDate              search period end
-     * @return availability info with minimum available percentage across the period
+     * @param positionsForObjectId all position/assignment rows sharing the same objectId
+     * @param startDate            the search period start date (inclusive)
+     * @param endDate              the search period end date (inclusive)
+     * @return availability info containing the minimum available percentage and maximum
+     *         concurrent assignment count during the period
      */
     private AvailabilityInfo calculateMinAvailabilityInPeriod(
             List<Position> positionsForObjectId,
