@@ -13,7 +13,6 @@ import de.tum.cit.aet.staffplan.service.matching.MatchingRule;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -34,7 +33,6 @@ public class PositionFinderService {
      * @param request the position finder request
      * @return matching positions with optional split suggestions
      */
-    @Transactional(readOnly = true)
     public PositionFinderResponseDTO findPositions(PositionFinderRequestDTO request) {
         // Validate request
         if (request.startDate() == null || request.endDate() == null) {
@@ -221,12 +219,8 @@ public class PositionFinderService {
         if (matches.isEmpty()) {
             splitSuggestions = generateSplitSuggestions(
                     candidates,
-                    processedObjectIds,
-                    normalizedEmployeeGrade,
                     employeeGradeValue,
-                    employeeMonthlyCost,
-                    fillPercentage,
-                    request
+                    fillPercentage
             );
             log.info("Generated {} split suggestions", splitSuggestions.size());
         }
@@ -268,12 +262,8 @@ public class PositionFinderService {
      */
     private List<SplitSuggestionDTO> generateSplitSuggestions(
             List<Position> candidates,
-            Set<String> processedObjectIds,
-            String normalizedEmployeeGrade,
             GradeValue employeeGradeValue,
-            BigDecimal employeeMonthlyCost,
-            int fillPercentage,
-            PositionFinderRequestDTO request
+            int fillPercentage
     ) {
         // Collect all positions with any available capacity that match the grade
         List<PositionMatchDTO> partialMatches = new ArrayList<>();
@@ -445,7 +435,7 @@ public class PositionFinderService {
         for (int i = start; i < positions.size(); i++) {
             current.add(positions.get(i));
             generateCombinationsHelper(positions, k, i + 1, current, result);
-            current.remove(current.size() - 1);
+            current.removeLast();
         }
     }
 

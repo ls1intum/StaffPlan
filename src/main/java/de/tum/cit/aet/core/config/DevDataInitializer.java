@@ -5,13 +5,13 @@ import de.tum.cit.aet.usermanagement.domain.UserGroup;
 import de.tum.cit.aet.usermanagement.domain.key.UserGroupId;
 import de.tum.cit.aet.usermanagement.repository.UserGroupRepository;
 import de.tum.cit.aet.usermanagement.repository.UserRepository;
+import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.Map;
@@ -50,8 +50,7 @@ public class DevDataInitializer implements ApplicationRunner {
     }
 
     @Override
-    @Transactional
-    public void run(ApplicationArguments args) {
+    public void run(@NonNull ApplicationArguments args) {
         log.info("Initializing test users for local development...");
 
         for (Map.Entry<String, String> entry : TEST_USERS.entrySet()) {

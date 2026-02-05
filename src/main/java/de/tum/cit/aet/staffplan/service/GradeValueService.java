@@ -6,7 +6,6 @@ import de.tum.cit.aet.staffplan.repository.GradeValueRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
 import java.util.List;
@@ -25,7 +24,6 @@ public class GradeValueService {
      *
      * @return ordered grade values with usage flags
      */
-    @Transactional(readOnly = true)
     public List<GradeValueDTO> getAllGradeValues() {
         Set<String> gradesInUse = new HashSet<>(gradeValueRepository.findGradesInUse());
         return gradeValueRepository.findAllByOrderBySortOrderAsc()
@@ -39,7 +37,6 @@ public class GradeValueService {
      *
      * @return active grade values ordered by sort order
      */
-    @Transactional(readOnly = true)
     public List<GradeValueDTO> getActiveGradeValues() {
         return gradeValueRepository.findByActiveTrueOrderBySortOrderAsc()
                 .stream()
@@ -53,7 +50,6 @@ public class GradeValueService {
      * @param id the grade value ID
      * @return the grade value
      */
-    @Transactional(readOnly = true)
     public GradeValueDTO getGradeValue(UUID id) {
         GradeValue gradeValue = gradeValueRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Grade value not found: " + id));
@@ -62,24 +58,10 @@ public class GradeValueService {
     }
 
     /**
-     * Returns a grade value by grade code.
-     *
-     * @param gradeCode the grade code to look up
-     * @return the grade value
-     */
-    @Transactional(readOnly = true)
-    public GradeValueDTO getGradeValueByCode(String gradeCode) {
-        GradeValue gradeValue = gradeValueRepository.findByGradeCode(gradeCode)
-                .orElseThrow(() -> new IllegalArgumentException("Grade value not found: " + gradeCode));
-        return GradeValueDTO.fromEntity(gradeValue);
-    }
-
-    /**
      * Returns grades that are currently used in positions.
      *
      * @return distinct base grades in use
      */
-    @Transactional(readOnly = true)
     public List<String> getGradesInUse() {
         return gradeValueRepository.findGradesInUse();
     }
@@ -90,7 +72,6 @@ public class GradeValueService {
      * @param dto the grade value payload
      * @return the created grade value
      */
-    @Transactional
     public GradeValueDTO createGradeValue(GradeValueDTO dto) {
         if (gradeValueRepository.existsByGradeCode(dto.gradeCode())) {
             throw new IllegalArgumentException("Grade code already exists: " + dto.gradeCode());
@@ -110,7 +91,6 @@ public class GradeValueService {
      * @param dto the grade value payload
      * @return the updated grade value
      */
-    @Transactional
     public GradeValueDTO updateGradeValue(UUID id, GradeValueDTO dto) {
         GradeValue gradeValue = gradeValueRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Grade value not found: " + id));
@@ -132,7 +112,6 @@ public class GradeValueService {
      *
      * @param id the grade value ID
      */
-    @Transactional
     public void deleteGradeValue(UUID id) {
         GradeValue gradeValue = gradeValueRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Grade value not found: " + id));

@@ -13,11 +13,14 @@ import java.util.UUID;
 @Repository
 public interface PositionRepository extends JpaRepository<Position, UUID> {
 
-    List<Position> findByResearchGroupId(UUID researchGroupId);
+    @Query("SELECT p FROM Position p LEFT JOIN FETCH p.researchGroup ORDER BY p.startDate ASC")
+    List<Position> findAllWithResearchGroup();
 
-    List<Position> findByResearchGroupIdOrderByStartDateAsc(UUID researchGroupId);
+    @Query("SELECT p FROM Position p LEFT JOIN FETCH p.researchGroup WHERE p.researchGroup.id = :researchGroupId ORDER BY p.startDate ASC")
+    List<Position> findByResearchGroupIdWithResearchGroup(@Param("researchGroupId") UUID researchGroupId);
 
-    List<Position> findAllByOrderByStartDateAsc();
+    @Query("SELECT p FROM Position p LEFT JOIN FETCH p.researchGroup")
+    List<Position> findAllWithResearchGroupForMatching();
 
     void deleteByResearchGroupId(UUID researchGroupId);
 

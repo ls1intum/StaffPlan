@@ -63,14 +63,12 @@ public class PositionResource {
      * Imports positions from a CSV file.
      *
      * @param file the CSV file to import
-     * @param researchGroupId optional research group ID to assign positions to
      * @return import result with count of imported positions
      * @throws IOException if file reading fails
      */
     @PostMapping("/import")
     public ResponseEntity<Map<String, Object>> importPositions(
-            @RequestParam("file") MultipartFile file,
-            @RequestParam(value = "researchGroupId", required = false) UUID researchGroupId) throws IOException {
+            @RequestParam("file") MultipartFile file) throws IOException {
 
         if (!currentUserProvider.isJobManager() && !currentUserProvider.isAdmin()) {
             return ResponseEntity.status(403)

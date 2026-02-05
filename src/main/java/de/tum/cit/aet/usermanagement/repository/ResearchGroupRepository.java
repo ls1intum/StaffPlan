@@ -19,11 +19,6 @@ public interface ResearchGroupRepository extends JpaRepository<ResearchGroup, UU
 
     List<ResearchGroup> findAllByArchivedFalseOrderByNameAsc();
 
-    List<ResearchGroup> findByHeadIsNullAndArchivedFalse();
-
-    @Query("SELECT rg FROM ResearchGroup rg WHERE rg.archived = false AND rg.professorLastName = :lastName AND rg.professorFirstName = :firstName")
-    Optional<ResearchGroup> findByProfessorName(@Param("firstName") String firstName, @Param("lastName") String lastName);
-
     @Query("SELECT rg FROM ResearchGroup rg WHERE rg.archived = false AND LOWER(rg.professorLastName) = LOWER(:lastName) AND LOWER(rg.professorFirstName) = LOWER(:firstName)")
     Optional<ResearchGroup> findByProfessorNameIgnoreCase(@Param("firstName") String firstName, @Param("lastName") String lastName);
 
@@ -33,16 +28,19 @@ public interface ResearchGroupRepository extends JpaRepository<ResearchGroup, UU
     @Query("SELECT rg FROM ResearchGroup rg WHERE rg.archived = false AND LOWER(rg.professorEmail) = LOWER(:email) AND rg.head IS NULL")
     Optional<ResearchGroup> findByProfessorEmailIgnoreCaseAndHeadIsNull(@Param("email") String email);
 
-    @Query("SELECT rg FROM ResearchGroup rg LEFT JOIN FETCH rg.aliases WHERE rg.id = :id")
+    @Query("SELECT rg FROM ResearchGroup rg LEFT JOIN FETCH rg.aliases LEFT JOIN FETCH rg.head WHERE rg.id = :id")
     Optional<ResearchGroup> findByIdWithAliases(@Param("id") UUID id);
 
-    @Query("SELECT DISTINCT rg FROM ResearchGroup rg LEFT JOIN FETCH rg.aliases WHERE rg.archived = false ORDER BY rg.name")
+    @Query("SELECT DISTINCT rg FROM ResearchGroup rg LEFT JOIN FETCH rg.aliases LEFT JOIN FETCH rg.head WHERE rg.archived = false ORDER BY rg.name")
     List<ResearchGroup> findAllWithAliasesNotArchived();
+
+    @Query("SELECT DISTINCT rg FROM ResearchGroup rg LEFT JOIN FETCH rg.aliases WHERE rg.head IS NULL AND rg.archived = false ORDER BY rg.name")
+    List<ResearchGroup> findByHeadIsNullWithAliases();
 
     @Query("""
             SELECT DISTINCT rg FROM ResearchGroup rg
             LEFT JOIN FETCH rg.aliases
-            LEFT JOIN rg.head h
+            LEFT JOIN FETCH rg.head h
             WHERE rg.archived = false
               AND (:search IS NULL OR :search = ''
                    OR LOWER(rg.name) LIKE LOWER(CONCAT('%', :search, '%'))

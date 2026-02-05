@@ -7,7 +7,6 @@ import de.tum.cit.aet.usermanagement.domain.ResearchGroup;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.BufferedReader;
@@ -39,23 +38,20 @@ public class PositionService {
             DateTimeFormatter.ofPattern("yyyy-MM-dd"),  // ISO: 2021-07-16
     };
 
-    @Transactional(readOnly = true)
     public List<PositionDTO> getAllPositions() {
-        return positionRepository.findAllByOrderByStartDateAsc()
+        return positionRepository.findAllWithResearchGroup()
                 .stream()
                 .map(PositionDTO::fromEntity)
                 .toList();
     }
 
-    @Transactional(readOnly = true)
     public List<PositionDTO> getPositionsByResearchGroup(UUID researchGroupId) {
-        return positionRepository.findByResearchGroupIdOrderByStartDateAsc(researchGroupId)
+        return positionRepository.findByResearchGroupIdWithResearchGroup(researchGroupId)
                 .stream()
                 .map(PositionDTO::fromEntity)
                 .toList();
     }
 
-    @Transactional
     public int importFromCsv(MultipartFile file, ResearchGroup researchGroup) throws IOException {
         List<Position> positions = parseCsvFile(file, researchGroup);
         positionRepository.saveAll(positions);
@@ -63,13 +59,11 @@ public class PositionService {
         return positions.size();
     }
 
-    @Transactional
     public void deleteByResearchGroup(UUID researchGroupId) {
         positionRepository.deleteByResearchGroupId(researchGroupId);
         log.info("Deleted positions for research group {}", researchGroupId);
     }
 
-    @Transactional
     public void deleteAll() {
         positionRepository.deleteAll();
         log.info("Deleted all positions");

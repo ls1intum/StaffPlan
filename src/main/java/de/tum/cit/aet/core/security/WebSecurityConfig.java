@@ -1,7 +1,6 @@
 package de.tum.cit.aet.core.security;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -25,9 +24,6 @@ import org.springframework.web.cors.CorsConfigurationSource;
 public class WebSecurityConfig {
     private final JwtAuthConverter jwtAuthConverter;
 
-    @Value("${staffplan.client.host}")
-    private String clientHost;
-
     @Bean
     protected SessionAuthenticationStrategy sessionAuthenticationStrategy() {
         return new RegisterSessionAuthenticationStrategy(new SessionRegistryImpl());
@@ -39,10 +35,9 @@ public class WebSecurityConfig {
      * @param http the HTTP security configuration
      * @param corsConfigurationSource the CORS configuration source
      * @return the configured security filter chain
-     * @throws Exception if configuration fails
      */
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http, CorsConfigurationSource corsConfigurationSource) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http, CorsConfigurationSource corsConfigurationSource) {
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource))
                 .csrf(AbstractHttpConfigurer::disable)
@@ -58,9 +53,7 @@ public class WebSecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/actuator/health").permitAll()
                         .anyRequest().authenticated()
                 )
-                .oauth2ResourceServer(server -> {
-                    server.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthConverter));
-                });
+                .oauth2ResourceServer(server -> server.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthConverter)));
 
         return http.build();
     }

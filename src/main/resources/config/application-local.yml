@@ -15,4 +15,4 @@ springdoc:
 
 logging:
   level:
-    de.tum.cit.aet: DEBUG
+    de.tum.cit.aet: INFO

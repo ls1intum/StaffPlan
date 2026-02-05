@@ -9,7 +9,6 @@ import de.tum.cit.aet.usermanagement.repository.UserGroupRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
@@ -41,7 +40,6 @@ public class ProfessorLoginMatchingService {
      *
      * @param user the user to match
      */
-    @Transactional
     public void matchProfessorToResearchGroup(User user) {
         if (user == null) {
             return;
@@ -106,10 +104,8 @@ public class ProfessorLoginMatchingService {
         Optional<ResearchGroup> match = researchGroupRepository
                 .findByProfessorUniversityIdAndHeadIsNull(user.getUniversityId());
 
-        if (match.isPresent()) {
-            log.debug("Found research group '{}' matching universityId: {}",
-                    match.get().getName(), user.getUniversityId());
-        }
+        match.ifPresent(researchGroup -> log.debug("Found research group '{}' matching universityId: {}",
+                researchGroup.getName(), user.getUniversityId()));
 
         return match;
     }
@@ -126,10 +122,8 @@ public class ProfessorLoginMatchingService {
         Optional<ResearchGroup> match = researchGroupRepository
                 .findByProfessorEmailIgnoreCaseAndHeadIsNull(user.getEmail());
 
-        if (match.isPresent()) {
-            log.debug("Found research group '{}' matching email: {}",
-                    match.get().getName(), user.getEmail());
-        }
+        match.ifPresent(researchGroup -> log.debug("Found research group '{}' matching email: {}",
+                researchGroup.getName(), user.getEmail()));
 
         return match;
     }

@@ -47,7 +47,6 @@ public class ResearchGroupService {
      *
      * @return list of research group DTOs
      */
-    @Transactional(readOnly = true)
     public List<ResearchGroupDTO> getAllResearchGroups() {
         return researchGroupRepository.findAllWithAliasesNotArchived()
                 .stream()
@@ -61,7 +60,6 @@ public class ResearchGroupService {
      * @param search the search term (can be null or empty for all results)
      * @return list of matching research group DTOs
      */
-    @Transactional(readOnly = true)
     public List<ResearchGroupDTO> searchResearchGroups(String search) {
         return researchGroupRepository.searchWithAliases(search)
                 .stream()
@@ -75,7 +73,6 @@ public class ResearchGroupService {
      * @param id the research group ID
      * @return the research group DTO
      */
-    @Transactional(readOnly = true)
     public ResearchGroupDTO getResearchGroup(UUID id) {
         ResearchGroup researchGroup = researchGroupRepository.findByIdWithAliases(id)
                 .orElseThrow(() -> new IllegalArgumentException("Research group not found: " + id));
@@ -84,24 +81,12 @@ public class ResearchGroupService {
     }
 
     /**
-     * Returns a research group entity by ID.
-     *
-     * @param id the research group ID
-     * @return optional containing the research group entity
-     */
-    @Transactional(readOnly = true)
-    public Optional<ResearchGroup> findById(UUID id) {
-        return researchGroupRepository.findById(id);
-    }
-
-    /**
      * Returns research groups without a head assigned.
      *
      * @return list of research group DTOs without head
      */
-    @Transactional(readOnly = true)
     public List<ResearchGroupDTO> getResearchGroupsWithoutHead() {
-        return researchGroupRepository.findByHeadIsNullAndArchivedFalse()
+        return researchGroupRepository.findByHeadIsNullWithAliases()
                 .stream()
                 .map(ResearchGroupDTO::fromEntity)
                 .toList();
@@ -113,7 +98,6 @@ public class ResearchGroupService {
      * @param dto the research group data
      * @return the created research group DTO
      */
-    @Transactional
     public ResearchGroupDTO createResearchGroup(ResearchGroupDTO dto) {
         if (researchGroupRepository.existsByName(dto.name())) {
             throw new IllegalArgumentException("Research group with name already exists: " + dto.name());
@@ -136,7 +120,6 @@ public class ResearchGroupService {
      * @param dto the updated research group data
      * @return the updated research group DTO
      */
-    @Transactional
     public ResearchGroupDTO updateResearchGroup(UUID id, ResearchGroupDTO dto) {
         ResearchGroup researchGroup = researchGroupRepository.findByIdWithAliases(id)
                 .orElseThrow(() -> new IllegalArgumentException("Research group not found: " + id));
@@ -162,7 +145,6 @@ public class ResearchGroupService {
      *
      * @param id the research group ID
      */
-    @Transactional
     public void archiveResearchGroup(UUID id) {
         ResearchGroup researchGroup = researchGroupRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Research group not found: " + id));
@@ -187,7 +169,6 @@ public class ResearchGroupService {
      * @param file the CSV file to import
      * @return the import result with counts and errors
      */
-    @Transactional
     public ResearchGroupImportResultDTO importFromCsv(MultipartFile file) {
         ResearchGroupImportResultDTO.Builder result = ResearchGroupImportResultDTO.builder();
 
@@ -220,6 +201,7 @@ public class ResearchGroupService {
                     String[] values = parseCsvLine(line, delimiter);
                     processImportRecord(values, headerIndices, result, lineNumber);
                 } catch (Exception e) {
+                    log.warn("Failed to import line {}: {}", lineNumber, e.getMessage());
                     result.addError("Line " + lineNumber + ": " + e.getMessage());
                 }
             }
@@ -358,6 +340,9 @@ public class ResearchGroupService {
     /**
      * Creates a user for the professor (if not exists) and assigns them as head of the research group.
      * Only creates the user if we have a professorUniversityId (login).
+     *
+     * If the professor is already the head of another research group, assignment is skipped
+     * to avoid violating the unique constraint on head_user_id.
      */
     private void createAndAssignProfessor(ResearchGroup group) {
         String login = group.getProfessorUniversityId();
@@ -409,6 +394,14 @@ public class ResearchGroupService {
             // Assign professor role if not already assigned
             if (!professor.hasAnyGroup(PROFESSOR_ROLE)) {
                 assignProfessorRole(professor);
+            }
+
+            // Check if this professor is already the head of another group (unique constraint)
+            if (researchGroupRepository.existsByHeadId(professor.getId())) {
+                log.warn("Professor '{}' ({}) is already head of another group, cannot assign to '{}'. "
+                        + "A professor can only be head of one research group.",
+                        professor.getFirstName() + " " + professor.getLastName(), login, group.getName());
+                return;
             }
 
             // Set as head of research group

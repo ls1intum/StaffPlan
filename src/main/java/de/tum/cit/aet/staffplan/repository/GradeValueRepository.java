@@ -14,8 +14,6 @@ public interface GradeValueRepository extends JpaRepository<GradeValue, UUID> {
 
     Optional<GradeValue> findByGradeCode(String gradeCode);
 
-    List<GradeValue> findByActiveTrue();
-
     List<GradeValue> findAllByOrderBySortOrderAsc();
 
     List<GradeValue> findByActiveTrueOrderBySortOrderAsc();

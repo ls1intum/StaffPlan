@@ -11,7 +11,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
 import java.util.List;
@@ -25,18 +24,6 @@ public class UserService {
     private final UserGroupRepository userGroupRepository;
 
     /**
-     * Returns all users with their roles.
-     *
-     * @return list of all users with their roles
-     */
-    @Transactional(readOnly = true)
-    public List<UserDTO> getAllUsers() {
-        return userRepository.findAll().stream()
-                .map(UserDTO::fromEntity)
-                .toList();
-    }
-
-    /**
      * Searches users with pagination and optional filters.
      *
      * @param search optional search term for name, email, or university ID
@@ -44,9 +31,8 @@ public class UserService {
      * @param pageable pagination parameters
      * @return page of matching users
      */
-    @Transactional(readOnly = true)
     public Page<UserDTO> searchUsers(String search, String role, Pageable pageable) {
-        return userRepository.searchUsersAdmin(search, role, pageable)
+        return userRepository.searchUsers(search, role, pageable)
                 .map(UserDTO::fromEntity);
     }
 
@@ -57,7 +43,6 @@ public class UserService {
      * @param roles the new list of roles
      * @return the updated user DTO
      */
-    @Transactional
     public UserDTO updateUserRoles(UUID userId, List<String> roles) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));

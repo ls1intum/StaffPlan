@@ -1,7 +1,6 @@
 package de.tum.cit.aet.core.security;
 
 import de.tum.cit.aet.core.exceptions.AccessDeniedException;
-import de.tum.cit.aet.usermanagement.domain.ResearchGroup;
 import de.tum.cit.aet.usermanagement.domain.User;
 import de.tum.cit.aet.usermanagement.service.AuthenticationService;
 import lombok.RequiredArgsConstructor;
@@ -38,22 +37,6 @@ public class CurrentUserProvider {
       return cachedUser;
    }
 
-   /**
-    * Returns the research group of the current user or throws an exception if not assigned.
-    *
-    * @return the research group of the current user
-    */
-   public ResearchGroup getResearchGroupOrThrow() {
-      ResearchGroup researchGroup = getUser().getResearchGroup();
-      if (!canSeeAllResearchGroups() && researchGroup == null) {
-         throw new AccessDeniedException("Your account must be assigned to a research group.");
-      }
-      if(researchGroup != null && researchGroup.isArchived()){
-         throw new AccessDeniedException("The research group is archived.");
-      }
-      return researchGroup;
-   }
-
    public boolean isAnonymous() {
       return getUser().hasNoGroup();
    }
@@ -78,33 +61,4 @@ public class CurrentUserProvider {
       return isAdmin() || isJobManager() || isProfessor() || isEmployee();
    }
 
-   public boolean canSeeAllResearchGroups() {
-      return isAnonymous() || isAdmin();
-   }
-
-   public void assertSameResearchGroupIfNotPrivileged(ResearchGroup target) {
-      if (!canSeeAllResearchGroups()) {
-         assertCanAccessResearchGroup(target);
-      }
-   }
-
-   /**
-    * Asserts that the current user can access the given research group.
-    *
-    * @param target the research group to check access for
-    */
-   public void assertCanAccessResearchGroup(ResearchGroup target) {
-      if(target != null && target.isArchived()){
-         throw new AccessDeniedException("The research group is archived.");
-      }
-
-      if (canSeeAllResearchGroups()) {
-         return;
-      }
-
-      ResearchGroup own = getResearchGroupOrThrow();
-      if (target == null || !own.getId().equals(target.getId())) {
-         throw new AccessDeniedException("This resource is not part of your research group.");
-      }
-   }
 }

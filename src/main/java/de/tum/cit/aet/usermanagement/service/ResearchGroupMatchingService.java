@@ -3,13 +3,10 @@ package de.tum.cit.aet.usermanagement.service;
 import de.tum.cit.aet.staffplan.domain.Position;
 import de.tum.cit.aet.staffplan.repository.PositionRepository;
 import de.tum.cit.aet.usermanagement.domain.ResearchGroup;
-import de.tum.cit.aet.usermanagement.domain.ResearchGroupAlias;
-import de.tum.cit.aet.usermanagement.repository.ResearchGroupAliasRepository;
 import de.tum.cit.aet.usermanagement.repository.ResearchGroupRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.regex.Matcher;
@@ -17,8 +14,8 @@ import java.util.regex.Pattern;
 
 /**
  * Service for matching organization units to research groups using various strategies:
- * 1. Exact match on name or abbreviation
- * 2. Alias pattern matching
+ * 1. Exact match on abbreviation
+ * 2. Exact match on name (case-sensitive and case-insensitive)
  * 3. Fuzzy matching with Levenshtein distance and token overlap
  */
 @Slf4j
@@ -49,63 +46,7 @@ public class ResearchGroupMatchingService {
     );
 
     private final ResearchGroupRepository researchGroupRepository;
-    private final ResearchGroupAliasRepository researchGroupAliasRepository;
     private final PositionRepository positionRepository;
-
-    /**
-     * Matches an organization unit string to a research group.
-     *
-     * @param orgUnit the organization unit string from position data
-     * @return the matching research group, or empty if no match found
-     */
-    @Transactional(readOnly = true)
-    public Optional<ResearchGroup> matchOrganizationUnit(String orgUnit) {
-        if (orgUnit == null || orgUnit.isBlank()) {
-            return Optional.empty();
-        }
-
-        // Check if this is a central unit (should not be assigned)
-        if (isCentralUnit(orgUnit)) {
-            log.debug("Organization unit is a central unit, skipping: {}", orgUnit);
-            return Optional.empty();
-        }
-
-        // Normalize the input
-        NormalizedOrgUnit normalized = normalizeOrgUnit(orgUnit);
-
-        // 1. Try exact match on abbreviation extracted from orgUnit
-        if (normalized.abbreviation != null) {
-            Optional<ResearchGroup> exactAbbr = researchGroupRepository.findByAbbreviation(normalized.abbreviation);
-            if (exactAbbr.isPresent()) {
-                log.debug("Exact abbreviation match for '{}': {}", orgUnit, exactAbbr.get().getName());
-                return exactAbbr;
-            }
-        }
-
-        // 2. Try exact match on name
-        Optional<ResearchGroup> exactName = researchGroupRepository.findByName(normalized.name);
-        if (exactName.isPresent()) {
-            log.debug("Exact name match for '{}': {}", orgUnit, exactName.get().getName());
-            return exactName;
-        }
-
-        // 3. Try alias matching
-        Optional<ResearchGroup> aliasMatch = matchByAlias(normalized.normalizedForMatching);
-        if (aliasMatch.isPresent()) {
-            log.debug("Alias match for '{}': {}", orgUnit, aliasMatch.get().getName());
-            return aliasMatch;
-        }
-
-        // 4. Try fuzzy matching
-        Optional<ResearchGroup> fuzzyMatch = matchByFuzzy(normalized.normalizedForMatching);
-        if (fuzzyMatch.isPresent()) {
-            log.debug("Fuzzy match for '{}': {}", orgUnit, fuzzyMatch.get().getName());
-            return fuzzyMatch;
-        }
-
-        log.debug("No match found for organization unit: {}", orgUnit);
-        return Optional.empty();
-    }
 
     /**
      * Batch assigns research groups to all unassigned positions based on organization unit matching.
@@ -113,10 +54,9 @@ public class ResearchGroupMatchingService {
      *
      * @return a map of matched positions (position ID -> research group name) and unmatched org units
      */
-    @Transactional
     public BatchAssignResult batchAssignPositions() {
-        // Pre-load all data once
-        List<Position> allPositions = positionRepository.findAll();
+        // Pre-load all data once (with researchGroup eagerly fetched)
+        List<Position> allPositions = positionRepository.findAllWithResearchGroupForMatching();
         List<ResearchGroup> allGroups = researchGroupRepository.findAllByArchivedFalseOrderByNameAsc();
 
         // Build lookup maps for fast exact matching
@@ -260,47 +200,6 @@ public class ResearchGroupMatchingService {
         String forMatching = normalized.toLowerCase().replaceAll("\\s+", " ").trim();
 
         return new NormalizedOrgUnit(name, abbreviation, forMatching);
-    }
-
-    private Optional<ResearchGroup> matchByAlias(String normalizedInput) {
-        // Try exact alias match
-        List<ResearchGroupAlias> exactMatches = researchGroupAliasRepository.findByExactPattern(normalizedInput);
-        if (!exactMatches.isEmpty()) {
-            return Optional.of(exactMatches.getFirst().getResearchGroup());
-        }
-
-        // Try contains alias match
-        List<ResearchGroupAlias> containsMatches = researchGroupAliasRepository.findByContainsPattern(normalizedInput);
-        if (!containsMatches.isEmpty()) {
-            return Optional.of(containsMatches.getFirst().getResearchGroup());
-        }
-
-        // Try prefix alias match
-        List<ResearchGroupAlias> prefixMatches = researchGroupAliasRepository.findByPrefixPattern(normalizedInput);
-        if (!prefixMatches.isEmpty()) {
-            return Optional.of(prefixMatches.getFirst().getResearchGroup());
-        }
-
-        return Optional.empty();
-    }
-
-    private Optional<ResearchGroup> matchByFuzzy(String normalizedInput) {
-        List<ResearchGroup> allGroups = researchGroupRepository.findAllByArchivedFalseOrderByNameAsc();
-
-        double bestScore = 0;
-        ResearchGroup bestMatch = null;
-
-        for (ResearchGroup group : allGroups) {
-            String groupNameNormalized = group.getName().toLowerCase().replaceAll("\\s+", " ").trim();
-            double score = calculateMatchScore(normalizedInput, groupNameNormalized);
-
-            if (score > bestScore && score >= FUZZY_MATCH_THRESHOLD) {
-                bestScore = score;
-                bestMatch = group;
-            }
-        }
-
-        return Optional.ofNullable(bestMatch);
     }
 
     /**

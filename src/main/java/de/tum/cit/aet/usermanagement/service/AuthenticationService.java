@@ -5,7 +5,6 @@ import de.tum.cit.aet.usermanagement.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.Map;
@@ -22,23 +21,11 @@ public class AuthenticationService {
     }
 
     /**
-     * Gets the authenticated user from JWT token.
-     *
-     * @param jwt the JWT authentication token
-     * @return the authenticated user
-     */
-    @Transactional
-    public User getAuthenticatedUser(JwtAuthenticationToken jwt) {
-        return updateAuthenticatedUser(jwt);
-    }
-
-    /**
      * Gets the authenticated user with research group eagerly loaded.
      *
      * @param jwt the JWT authentication token
      * @return the authenticated user with research group
      */
-    @Transactional
     public User getAuthenticatedUserWithResearchGroup(JwtAuthenticationToken jwt) {
         User user = updateAuthenticatedUser(jwt);
         // Re-fetch with research group to ensure it's loaded
@@ -54,7 +41,6 @@ public class AuthenticationService {
      * @param jwt the JWT authentication token
      * @return the created or updated user
      */
-    @Transactional
     public User updateAuthenticatedUser(JwtAuthenticationToken jwt) {
         Map<String, Object> attributes = jwt.getTokenAttributes();
         String universityId = getUniversityId(jwt);
