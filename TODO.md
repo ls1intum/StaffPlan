@@ -36,7 +36,7 @@
 ### Reliability
 - [ ] **M12**: Inconsistent timestamp type in Liquibase migration 005 (`timestamp` vs `TIMESTAMP WITH TIME ZONE`)
 - [ ] **M13**: Missing unique constraint on `users.university_id`
-- [ ] **M14**: H2 vs PostgreSQL dialect mismatch in tests — should use Testcontainers
+- [x] **M14**: H2 vs PostgreSQL dialect mismatch in tests — should use Testcontainers
 - [ ] **M15**: No manual approval gate between staging and production deployment
 - [ ] **M16**: Fragile exception-based test assertions using `assertThrows(Exception.class, ...)`
 - [ ] **M17**: No service layer unit tests — only integration tests exist

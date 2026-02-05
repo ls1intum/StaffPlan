@@ -1,25 +1,22 @@
 spring:
   datasource:
-    url: jdbc:h2:mem:testdb;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH
-    username: sa
-    password:
-    driver-class-name: org.h2.Driver
+    driver-class-name: org.postgresql.Driver
 
   jpa:
     open-in-view: false
     show-sql: false
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: validate
       naming:
         physical-strategy: org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy
         implicit-strategy: org.springframework.boot.hibernate.SpringImplicitNamingStrategy
     properties:
       hibernate:
         format_sql: false
-        dialect: org.hibernate.dialect.H2Dialect
 
   liquibase:
-    enabled: false
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.xml
 
   security:
     oauth2:
@@ -32,6 +29,8 @@ logging:
     root: WARN
     de.tum.cit.aet: INFO
     org.springframework.test: INFO
+    org.testcontainers: INFO
+    tc.testcontainers: INFO
 
 staffplan:
   keycloak:
