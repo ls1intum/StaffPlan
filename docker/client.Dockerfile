@@ -11,9 +11,11 @@ ENV NODE_ENV=production
 
 RUN npm run build
 
-# Minimal image to hold the built files
-FROM alpine:3.21
+# Minimal nginx to serve the Angular app
+FROM nginx:alpine AS production
 
-COPY --from=builder /app/dist/StaffPlan/browser /srv
+COPY --from=builder /app/dist/StaffPlan/browser /usr/share/nginx/html
 
-CMD ["sh", "-c", "echo 'Static files ready in /srv' && sleep infinity"]
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]

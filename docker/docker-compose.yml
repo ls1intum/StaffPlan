@@ -43,7 +43,7 @@ services:
       postgres:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "exec 3<>/dev/tcp/localhost/8081 && echo -e 'GET /health/ready HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3 && cat <&3 | grep -q '200 OK'"]
+      test: ["CMD-SHELL", "{ printf 'HEAD /health/ready HTTP/1.0\r\n\r\n' >&0; grep 'HTTP/1.0 200'; } 0<>/dev/tcp/localhost/9000"]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -64,7 +64,8 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/staffplan
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: staffplan
-      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://keycloak:8081/realms/staffplan
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://localhost:8081/realms/staffplan
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_SET_URI: http://keycloak:8081/realms/staffplan/protocol/openid-connect/certs
       STAFFPLAN_KEYCLOAK_CLIENT_ID: staffplan-client
       STAFFPLAN_CLIENT_HOST: http://localhost:4200
     ports:

@@ -28,7 +28,8 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: http://localhost:8081/realms/staffplan
+          issuer-uri: ${SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI:http://localhost:8081/realms/staffplan}
+          jwk-set-uri: ${SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_SET_URI:http://localhost:8081/realms/staffplan/protocol/openid-connect/certs}
 
 springdoc:
   api-docs:
