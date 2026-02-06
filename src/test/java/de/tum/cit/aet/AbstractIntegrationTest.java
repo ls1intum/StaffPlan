@@ -30,7 +30,7 @@ import java.time.Instant;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class AbstractIntegrationTest {
 
-    static final PostgreSQLContainer postgres = new PostgreSQLContainer("postgres:17-alpine");
+    static final PostgreSQLContainer postgres = new PostgreSQLContainer("postgres:18-alpine");
 
     static {
         postgres.start();

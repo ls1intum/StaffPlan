@@ -16,7 +16,14 @@ WORKDIR /app
 # Install curl for health checks
 RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 
+# Create a non-root user
+RUN addgroup --system appgroup && adduser --system --ingroup appgroup appuser
+
 COPY --from=builder /app/application.jar app.jar
+
+RUN chown appuser:appgroup /app/app.jar
+
+USER appuser
 
 EXPOSE 8080
 

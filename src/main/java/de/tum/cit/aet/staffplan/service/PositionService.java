@@ -4,6 +4,7 @@ import de.tum.cit.aet.staffplan.domain.Position;
 import de.tum.cit.aet.staffplan.dto.PositionDTO;
 import de.tum.cit.aet.staffplan.repository.PositionRepository;
 import de.tum.cit.aet.usermanagement.domain.ResearchGroup;
+import de.tum.cit.aet.util.CsvParser;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -69,20 +70,6 @@ public class PositionService {
         log.info("Deleted all positions");
     }
 
-    private char detectDelimiter(String headerLine) {
-        int semicolons = headerLine.length() - headerLine.replace(";", "").length();
-        int commas = headerLine.length() - headerLine.replace(",", "").length();
-        int tabs = headerLine.length() - headerLine.replace("\t", "").length();
-
-        if (tabs > semicolons && tabs > commas) {
-            return '\t';
-        }
-        if (semicolons > commas) {
-            return ';';
-        }
-        return ',';
-    }
-
     private List<Position> parseCsvFile(MultipartFile file, ResearchGroup researchGroup) throws IOException {
         List<Position> positions = new ArrayList<>();
 
@@ -94,15 +81,12 @@ public class PositionService {
                 return positions;
             }
 
-            // Remove BOM if present
-            if (headerLine.startsWith("\uFEFF")) {
-                headerLine = headerLine.substring(1);
-            }
+            headerLine = CsvParser.stripBom(headerLine);
 
-            char delimiter = detectDelimiter(headerLine);
+            char delimiter = CsvParser.detectDelimiter(headerLine);
             log.info("Detected CSV delimiter: '{}'", delimiter == '\t' ? "TAB" : String.valueOf(delimiter));
 
-            String[] headers = parseCsvLine(headerLine, delimiter);
+            String[] headers = CsvParser.parseLine(headerLine, delimiter);
             log.info("Found {} CSV headers: {}", headers.length, String.join(", ", headers));
 
             int[] columnIndices = mapColumnIndices(headers);
@@ -127,26 +111,6 @@ public class PositionService {
         }
 
         return positions;
-    }
-
-    private String[] parseCsvLine(String line, char delimiter) {
-        List<String> fields = new ArrayList<>();
-        StringBuilder current = new StringBuilder();
-        boolean inQuotes = false;
-
-        for (char c : line.toCharArray()) {
-            if (c == '"') {
-                inQuotes = !inQuotes;
-            } else if (c == delimiter && !inQuotes) {
-                fields.add(current.toString().trim());
-                current = new StringBuilder();
-            } else {
-                current.append(c);
-            }
-        }
-        fields.add(current.toString().trim());
-
-        return fields.toArray(new String[0]);
     }
 
     private int[] mapColumnIndices(String[] headers) {
@@ -216,7 +180,7 @@ public class PositionService {
     }
 
     private Position parsePositionFromLine(String line, int[] columnIndices, ResearchGroup researchGroup, char delimiter) {
-        String[] values = parseCsvLine(line, delimiter);
+        String[] values = CsvParser.parseLine(line, delimiter);
         Position position = new Position();
 
         position.setPositionRelevanceType(getValueOrNull(values, columnIndices[0]));

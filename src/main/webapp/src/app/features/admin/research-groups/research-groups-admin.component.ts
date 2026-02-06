@@ -1,15 +1,15 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  computed,
   DestroyRef,
   inject,
   OnInit,
   signal,
-  computed,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
-import { FormsModule } from '@angular/forms';
+import { debounceTime, distinctUntilChanged } from 'rxjs';
+import { NonNullableFormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { TableModule } from 'primeng/table';
 import { Button } from 'primeng/button';
 import { Dialog } from 'primeng/dialog';
@@ -25,7 +25,7 @@ import { Tooltip } from 'primeng/tooltip';
 import { IconField } from 'primeng/iconfield';
 import { InputIcon } from 'primeng/inputicon';
 import { ResearchGroupService } from './research-group.service';
-import { ResearchGroup, ResearchGroupFormData } from './research-group.model';
+import { ResearchGroup } from './research-group.model';
 
 const DEPARTMENTS = [
   { label: 'Mathematics', value: 'Mathematics' },
@@ -43,7 +43,7 @@ const CAMPUSES = [
 @Component({
   selector: 'app-research-groups-admin',
   imports: [
-    FormsModule,
+    ReactiveFormsModule,
     TableModule,
     Button,
     Dialog,
@@ -70,8 +70,7 @@ const CAMPUSES = [
               pInputText
               type="text"
               placeholder="Suchen..."
-              [ngModel]="searchTerm()"
-              (ngModelChange)="onSearchChange($event)"
+              [formControl]="searchControl"
             />
           </p-iconfield>
         </div>
@@ -256,22 +255,22 @@ const CAMPUSES = [
         [modal]="true"
         [style]="{ width: '650px' }"
       >
-        <div class="form-grid">
+        <div class="form-grid" [formGroup]="researchGroupForm">
           <div class="form-field">
             <label for="name">Name *</label>
-            <input pInputText id="name" [(ngModel)]="formData.name" />
+            <input pInputText id="name" formControlName="name" />
           </div>
 
           <div class="form-field">
             <label for="abbreviation">Kürzel *</label>
-            <input pInputText id="abbreviation" [(ngModel)]="formData.abbreviation" />
+            <input pInputText id="abbreviation" formControlName="abbreviation" />
           </div>
 
           <div class="form-field">
             <label for="department">Department</label>
             <p-select
               id="department"
-              [(ngModel)]="formData.department"
+              formControlName="department"
               [options]="departments"
               optionLabel="label"
               optionValue="value"
@@ -284,7 +283,7 @@ const CAMPUSES = [
             <label for="campus">Campus</label>
             <p-select
               id="campus"
-              [(ngModel)]="formData.campus"
+              formControlName="campus"
               [options]="campuses"
               optionLabel="label"
               optionValue="value"
@@ -295,12 +294,12 @@ const CAMPUSES = [
 
           <div class="form-field">
             <label for="professorFirstName">Professor Vorname</label>
-            <input pInputText id="professorFirstName" [(ngModel)]="formData.professorFirstName" />
+            <input pInputText id="professorFirstName" formControlName="professorFirstName" />
           </div>
 
           <div class="form-field">
             <label for="professorLastName">Professor Nachname</label>
-            <input pInputText id="professorLastName" [(ngModel)]="formData.professorLastName" />
+            <input pInputText id="professorLastName" formControlName="professorLastName" />
           </div>
 
           <div class="form-field">
@@ -308,7 +307,7 @@ const CAMPUSES = [
             <input
               pInputText
               id="professorEmail"
-              [(ngModel)]="formData.professorEmail"
+              formControlName="professorEmail"
               placeholder="z.B. krusche&#64;tum.de"
             />
           </div>
@@ -318,19 +317,19 @@ const CAMPUSES = [
             <input
               pInputText
               id="professorUniversityId"
-              [(ngModel)]="formData.professorUniversityId"
+              formControlName="professorUniversityId"
               placeholder="z.B. ne23kow"
             />
           </div>
 
           <div class="form-field full-width">
             <label for="websiteUrl">Website URL</label>
-            <input pInputText id="websiteUrl" [(ngModel)]="formData.websiteUrl" />
+            <input pInputText id="websiteUrl" formControlName="websiteUrl" />
           </div>
 
           <div class="form-field full-width">
             <label for="description">Beschreibung</label>
-            <textarea pTextarea id="description" [(ngModel)]="formData.description" rows="3">
+            <textarea pTextarea id="description" formControlName="description" rows="3">
             </textarea>
           </div>
         </div>
@@ -638,8 +637,7 @@ export class ResearchGroupsAdminComponent implements OnInit {
   private readonly confirmationService = inject(ConfirmationService);
   private readonly messageService = inject(MessageService);
   private readonly destroyRef = inject(DestroyRef);
-
-  private readonly searchSubject = new Subject<string>();
+  private readonly fb = inject(NonNullableFormBuilder);
 
   readonly researchGroups = signal<ResearchGroup[]>([]);
   readonly loading = signal(false);
@@ -661,22 +659,50 @@ export class ResearchGroupsAdminComponent implements OnInit {
   readonly departments = DEPARTMENTS;
   readonly campuses = CAMPUSES;
 
-  formData: ResearchGroupFormData = this.getEmptyFormData();
+  // Reactive form control for search
+  readonly searchControl = this.fb.control('');
+
+  // Reactive form for research group dialog
+  readonly researchGroupForm = this.fb.group({
+    name: '',
+    abbreviation: '',
+    description: '',
+    websiteUrl: '',
+    campus: '',
+    department: '',
+    professorFirstName: '',
+    professorLastName: '',
+    professorEmail: '',
+    professorUniversityId: '',
+  });
+
+  // Signal-based form values for computed validity
+  private readonly formValues = signal({ name: '', abbreviation: '' });
+  readonly isFormValid = computed(() => {
+    const values = this.formValues();
+    return !!values.name && !!values.abbreviation;
+  });
 
   ngOnInit(): void {
-    // Set up debounced search
-    this.searchSubject
+    // Set up debounced search from reactive form control
+    this.searchControl.valueChanges
       .pipe(debounceTime(300), distinctUntilChanged(), takeUntilDestroyed(this.destroyRef))
       .subscribe((term) => {
         this.searchTerm.set(term);
         this.loadResearchGroups();
       });
 
-    this.loadResearchGroups();
-  }
+    // Sync form value changes to signal for validity
+    this.researchGroupForm.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((values) => {
+        this.formValues.set({
+          name: values.name ?? '',
+          abbreviation: values.abbreviation ?? '',
+        });
+      });
 
-  onSearchChange(term: string): void {
-    this.searchSubject.next(term);
+    this.loadResearchGroups();
   }
 
   loadResearchGroups(): void {
@@ -699,13 +725,13 @@ export class ResearchGroupsAdminComponent implements OnInit {
   }
 
   openCreateDialog(): void {
-    this.formData = this.getEmptyFormData();
+    this.researchGroupForm.reset();
     this.editingId.set(null);
     this.dialogVisible.set(true);
   }
 
   openEditDialog(group: ResearchGroup): void {
-    this.formData = {
+    this.researchGroupForm.patchValue({
       name: group.name,
       abbreviation: group.abbreviation,
       description: group.description ?? '',
@@ -716,8 +742,7 @@ export class ResearchGroupsAdminComponent implements OnInit {
       professorLastName: group.professorLastName ?? '',
       professorEmail: group.professorEmail ?? '',
       professorUniversityId: group.professorUniversityId ?? '',
-      aliases: group.aliases ?? [],
-    };
+    });
     this.editingId.set(group.id);
     this.dialogVisible.set(true);
   }
@@ -727,25 +752,22 @@ export class ResearchGroupsAdminComponent implements OnInit {
     this.editingId.set(null);
   }
 
-  isFormValid(): boolean {
-    return !!this.formData.name && !!this.formData.abbreviation;
-  }
-
   saveResearchGroup(): void {
     if (!this.isFormValid()) return;
 
+    const formValue = this.researchGroupForm.getRawValue();
     const data = {
-      name: this.formData.name,
-      abbreviation: this.formData.abbreviation,
-      description: this.formData.description || null,
-      websiteUrl: this.formData.websiteUrl || null,
-      campus: this.formData.campus || null,
-      department: this.formData.department || null,
-      professorFirstName: this.formData.professorFirstName || null,
-      professorLastName: this.formData.professorLastName || null,
-      professorEmail: this.formData.professorEmail || null,
-      professorUniversityId: this.formData.professorUniversityId || null,
-      aliases: this.formData.aliases,
+      name: formValue.name,
+      abbreviation: formValue.abbreviation,
+      description: formValue.description || null,
+      websiteUrl: formValue.websiteUrl || null,
+      campus: formValue.campus || null,
+      department: formValue.department || null,
+      professorFirstName: formValue.professorFirstName || null,
+      professorLastName: formValue.professorLastName || null,
+      professorEmail: formValue.professorEmail || null,
+      professorUniversityId: formValue.professorUniversityId || null,
+      aliases: [] as string[],
     };
 
     const editId = this.editingId();
@@ -912,21 +934,5 @@ export class ResearchGroupsAdminComponent implements OnInit {
         });
       },
     });
-  }
-
-  private getEmptyFormData(): ResearchGroupFormData {
-    return {
-      name: '',
-      abbreviation: '',
-      description: '',
-      websiteUrl: '',
-      campus: '',
-      department: '',
-      professorFirstName: '',
-      professorLastName: '',
-      professorEmail: '',
-      professorUniversityId: '',
-      aliases: [],
-    };
   }
 }

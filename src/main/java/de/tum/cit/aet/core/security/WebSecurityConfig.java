@@ -43,12 +43,7 @@ public class WebSecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.GET, "/v2/topics/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/v2/published-theses/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/v2/published-presentations/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/v2/research-groups/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/v2/calendar/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/v2/avatars/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/v2/research-groups/**").authenticated()
                         .requestMatchers(HttpMethod.GET, "/actuator/info").permitAll()
                         .requestMatchers(HttpMethod.GET, "/actuator/health").permitAll()
                         .anyRequest().authenticated()

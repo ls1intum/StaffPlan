@@ -18,6 +18,8 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -69,9 +71,16 @@ public class PositionFinderService {
             throw new IllegalArgumentException("Fill percentage must be between 1 and 100");
         }
 
+        // Pre-load all grade values into a map for efficient lookup
+        Map<String, GradeValue> gradeValueMap = gradeValueRepository.findAll().stream()
+                .collect(Collectors.toMap(GradeValue::getGradeCode, Function.identity(), (existing, duplicate) -> {
+                    log.warn("Duplicate grade code found: {} - keeping first occurrence", existing.getGradeCode());
+                    return existing;
+                }));
+
         // Get employee grade value (normalize the grade code)
         String normalizedEmployeeGrade = normalizeGradeCode(request.employeeGrade());
-        GradeValue employeeGradeValue = gradeValueRepository.findByGradeCode(normalizedEmployeeGrade)
+        GradeValue employeeGradeValue = Optional.ofNullable(gradeValueMap.get(normalizedEmployeeGrade))
                 .orElseThrow(() -> new IllegalArgumentException("Unknown employee grade: " + request.employeeGrade() + " (normalized: " + normalizedEmployeeGrade + ")"));
 
         BigDecimal employeeMonthlyCost = calculateMonthlyCost(employeeGradeValue, fillPercentage);
@@ -115,8 +124,8 @@ public class PositionFinderService {
             // Get position grade value (normalize the grade code for matching)
             // Use tariffGroup which contains the actual grade (E10, E13, etc.)
             String normalizedGrade = normalizeGradeCode(position.getTariffGroup());
-            Optional<GradeValue> positionGradeOpt = gradeValueRepository.findByGradeCode(normalizedGrade);
-            if (positionGradeOpt.isEmpty()) {
+            GradeValue positionGradeFromMap = gradeValueMap.get(normalizedGrade);
+            if (positionGradeFromMap == null) {
                 skippedUnknownGrade++;
                 if (skippedUnknownGrade <= 5) {
                     log.warn("Skipping position {} - unknown grade: '{}' (normalized: '{}')", objectId, position.getTariffGroup(), normalizedGrade);
@@ -124,7 +133,7 @@ public class PositionFinderService {
                 continue;
             }
 
-            GradeValue positionGradeValue = positionGradeOpt.get();
+            GradeValue positionGradeValue = positionGradeFromMap;
 
             // Get all positions for this objectId to calculate availability across the entire period
             List<Position> positionsForObjectId = positionsByObjectId.get(objectId);
@@ -247,7 +256,8 @@ public class PositionFinderService {
                     employeeGradeValue,
                     fillPercentage,
                     request.startDate(),
-                    request.endDate()
+                    request.endDate(),
+                    gradeValueMap
             );
             log.info("Generated {} split suggestions", splitSuggestions.size());
         }
@@ -322,7 +332,8 @@ public class PositionFinderService {
             GradeValue employeeGradeValue,
             int fillPercentage,
             LocalDate startDate,
-            LocalDate endDate
+            LocalDate endDate,
+            Map<String, GradeValue> gradeValueMap
     ) {
         // Group candidates by objectId
         Map<String, List<Position>> positionsByObjectId = new HashMap<>();
@@ -345,12 +356,10 @@ public class PositionFinderService {
 
             // Check grade matches
             String normalizedGrade = normalizeGradeCode(position.getTariffGroup());
-            Optional<GradeValue> positionGradeOpt = gradeValueRepository.findByGradeCode(normalizedGrade);
-            if (positionGradeOpt.isEmpty()) {
+            GradeValue positionGradeValue = gradeValueMap.get(normalizedGrade);
+            if (positionGradeValue == null) {
                 continue;
             }
-
-            GradeValue positionGradeValue = positionGradeOpt.get();
 
             // Only include positions of the same or higher grade (budget-wise)
             if (positionGradeValue.getMonthlyValue().compareTo(employeeGradeValue.getMonthlyValue()) < 0) {
@@ -609,9 +618,11 @@ public class PositionFinderService {
                 boundaries.add(aEnd);
             }
             // Also add day after end date as a boundary (when availability changes)
-            LocalDate dayAfterEnd = aEnd.plusDays(1);
-            if (!dayAfterEnd.isBefore(startDate) && !dayAfterEnd.isAfter(endDate)) {
-                boundaries.add(dayAfterEnd);
+            if (!aEnd.equals(LocalDate.MAX)) {
+                LocalDate dayAfterEnd = aEnd.plusDays(1);
+                if (!dayAfterEnd.isBefore(startDate) && !dayAfterEnd.isAfter(endDate)) {
+                    boundaries.add(dayAfterEnd);
+                }
             }
         }
 

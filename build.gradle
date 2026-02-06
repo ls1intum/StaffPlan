@@ -137,7 +137,7 @@ jacocoTestReport {
     }
 
     doLast {
-        def report = file("${buildDir}/reports/jacoco/test/jacocoTestReport.xml")
+        def report = file("${layout.buildDirectory.get()}/reports/jacoco/test/jacocoTestReport.xml")
         if (report.exists()) {
             def parser = new XmlSlurper()
             parser.setFeature("http://apache.org/xml/features/disallow-doctype-decl", false)
@@ -170,7 +170,7 @@ jacocoTestReport {
             println " Methods:      ${calcCoverage(methodCounter)}"
             println " Classes:      ${calcCoverage(classCounter)}"
             println "═══════════════════════════════════════════════════════════════"
-            println " Full report: file://${buildDir}/reports/jacoco/test/html/index.html"
+            println " Full report: file://${layout.buildDirectory.get()}/reports/jacoco/test/html/index.html"
             println "═══════════════════════════════════════════════════════════════"
         }
     }

@@ -24,47 +24,47 @@
 - [ ] **M1**: No rate limiting on any API endpoint
 - [ ] **M2**: No `@Valid` on `@RequestBody` parameters in controllers (`GradeValueResource`, `ResearchGroupResource`, `PositionFinderResource`)
 - [ ] **M3**: Actuator endpoints publicly exposed through nginx — `nginx.conf`
-- [ ] **M4**: Server Dockerfile runs as root — `docker/server.Dockerfile`
+- [x] **M4**: Server Dockerfile runs as root — `docker/server.Dockerfile`
 - [ ] **M5**: `DELETE /v2/positions` without `researchGroupId` deletes ALL positions — `PositionResource.java`
 - [ ] **M6**: No page size limit on `UserResource.getAllUsers()` — `UserResource.java`
-- [ ] **M7**: Stale security matchers for non-existent paths — `WebSecurityConfig.java`
-- [ ] **M8**: GET endpoints for research groups are `permitAll()` but controller requires admin — `WebSecurityConfig.java`
+- [x] **M7**: Stale security matchers for non-existent paths — `WebSecurityConfig.java`
+- [x] **M8**: GET endpoints for research groups are `permitAll()` but controller requires admin — `WebSecurityConfig.java`
 - [ ] **M9**: No file size/type validation on CSV upload endpoints
 - [ ] **M10**: Direct Access Grants (ROPC) enabled in Keycloak client — `staffplan-realm.json`
 - [ ] **M11**: Authorization logic duplicated in controllers instead of using `@PreAuthorize`
 
 ### Reliability
 - [ ] **M12**: Inconsistent timestamp type in Liquibase migration 005 (`timestamp` vs `TIMESTAMP WITH TIME ZONE`)
-- [ ] **M13**: Missing unique constraint on `users.university_id`
+- [x] **M13**: Missing unique constraint on `users.university_id`
 - [x] **M14**: H2 vs PostgreSQL dialect mismatch in tests — should use Testcontainers
 - [ ] **M15**: No manual approval gate between staging and production deployment
-- [ ] **M16**: Fragile exception-based test assertions using `assertThrows(Exception.class, ...)`
+- [x] **M16**: Fragile exception-based test assertions using `assertThrows(Exception.class, ...)`
 - [ ] **M17**: No service layer unit tests — only integration tests exist
 - [ ] **M18**: Keycloak brute force threshold too high (`failureFactor: 30`)
 - [ ] **M19**: Excessively long session timeouts (30 days idle)
 - [ ] **M20**: `sslRequired: "none"` in Keycloak realm JSON
 
 ### Performance
-- [ ] **M21**: Repeated `gradeValueRepository.findByGradeCode()` lookups in `PositionFinderService` loops
-- [ ] **M22**: `isFormValid()` methods called in templates on every change detection cycle
+- [x] **M21**: Repeated `gradeValueRepository.findByGradeCode()` lookups in `PositionFinderService` loops
+- [x] **M22**: `isFormValid()` methods called in templates on every change detection cycle
 - [ ] **M23**: `hasChanges()`/`hasRole()` methods called per-row in admin users table
 - [ ] **M24**: `PositionService.importFromCsv()` loads entire CSV into memory
 
 ### UX
-- [ ] **M25**: No wildcard/404 route — blank page on bad URLs
-- [ ] **M26**: HTML `lang="en"` but UI is German — wrong screen reader pronunciation
+- [x] **M25**: No wildcard/404 route — blank page on bad URLs
+- [x] **M26**: HTML `lang="en"` but UI is German — wrong screen reader pronunciation
 - [ ] **M27**: No loading indicator on grade values table refresh
 - [ ] **M28**: Landing page redirects users without roles to `/positions` causing potential loops
 - [ ] **M29**: Missing ARIA labels on navigation elements
 - [ ] **M30**: Upload success/error messages persist indefinitely
-- [ ] **M31**: `window.location.reload()` in admin users component
+- [x] **M31**: `window.location.reload()` in admin users component
 
 ### Maintainability
-- [ ] **M32**: `::ng-deep` used in 7+ places (deprecated)
-- [ ] **M33**: Template-driven forms used everywhere (conventions say reactive forms)
+- [x] **M32**: `::ng-deep` used in 7+ places (deprecated)
+- [x] **M33**: Template-driven forms used everywhere (conventions say reactive forms)
 - [ ] **M34**: Inconsistent signal vs plain field usage for dialog state
-- [ ] **M35**: Duplicate CSV parsing logic across `PositionService` and `ResearchGroupService`
-- [ ] **M36**: `application.yml` contains unrelated `artemis` configuration block
+- [x] **M35**: Duplicate CSV parsing logic across `PositionService` and `ResearchGroupService`
+- [x] **M36**: `application.yml` contains unrelated `artemis` configuration block
 - [ ] **M37**: `effect()` with `allowSignalWrites: true` in Gantt component
 - [ ] **M38**: Potential `LazyInitializationException` in `ResearchGroupDTO.fromEntity()` accessing lazy `head`
 - [ ] **M39**: `BudgetEfficiencyRule.evaluate()` potential division by zero
@@ -78,7 +78,7 @@
 - [ ] **L5**: `AuthenticationService` uses `@Autowired` instead of `@RequiredArgsConstructor`
 - [ ] **L6**: `experimentalDecorators` in tsconfig not needed for Angular 21
 - [ ] **L7**: Hardcoded color values instead of PrimeNG CSS variables
-- [ ] **L8**: `.DS_Store` files committed to repository
+- [x] **L8**: `.DS_Store` files committed to repository
 - [ ] **L9**: No JaCoCo coverage threshold enforced
 - [ ] **L10**: `npm install` instead of `npm ci` in CI workflows
 - [ ] **L11**: Gradle version mismatch in `check-server-start.yml` (9.2.0 vs 9.3.1)

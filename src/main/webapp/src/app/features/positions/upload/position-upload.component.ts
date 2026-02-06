@@ -1,4 +1,11 @@
-import { ChangeDetectionStrategy, Component, inject, output, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  inject,
+  output,
+  signal,
+  ViewEncapsulation,
+} from '@angular/core';
 import { FileUpload } from 'primeng/fileupload';
 import { PositionService } from '../position.service';
 
@@ -62,7 +69,7 @@ interface UploadEvent {
       color: #991b1b;
     }
 
-    :host ::ng-deep .compact-upload {
+    .compact-upload {
       .p-button {
         font-size: 0.65rem !important;
         padding: 0.25rem 0.5rem !important;
@@ -75,6 +82,7 @@ interface UploadEvent {
     }
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
+  encapsulation: ViewEncapsulation.None,
 })
 export class PositionUploadComponent {
   private readonly positionService = inject(PositionService);

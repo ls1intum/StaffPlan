@@ -1,12 +1,14 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  computed,
+  DestroyRef,
   inject,
   OnInit,
   signal,
-  computed,
 } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { NonNullableFormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { CurrencyPipe } from '@angular/common';
 import { Card } from 'primeng/card';
 import { TableModule } from 'primeng/table';
@@ -15,13 +17,13 @@ import { Dialog } from 'primeng/dialog';
 import { InputText } from 'primeng/inputtext';
 import { InputNumber } from 'primeng/inputnumber';
 import { Select } from 'primeng/select';
-import { Checkbox } from 'primeng/checkbox';
+import { Checkbox, CheckboxChangeEvent } from 'primeng/checkbox';
 import { Tag } from 'primeng/tag';
 import { ConfirmDialog } from 'primeng/confirmdialog';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { Toast } from 'primeng/toast';
 import { GradeValueService } from './grade-value.service';
-import { GradeValue, GradeValueFormData } from './grade-value.model';
+import { GradeValue } from './grade-value.model';
 
 const GRADE_TYPES = [
   { label: 'Entgelt (E)', value: 'E' },
@@ -34,7 +36,7 @@ const GRADE_TYPES = [
 @Component({
   selector: 'app-grade-values-admin',
   imports: [
-    FormsModule,
+    ReactiveFormsModule,
     CurrencyPipe,
     Card,
     TableModule,
@@ -146,14 +148,13 @@ const GRADE_TYPES = [
         [modal]="true"
         [style]="{ width: '500px' }"
       >
-        <div class="form-grid">
+        <div class="form-grid" [formGroup]="gradeForm">
           <div class="form-field">
             <label for="gradeCode">Besoldungsgruppe *</label>
             <input
               pInputText
               id="gradeCode"
-              [(ngModel)]="formData.gradeCode"
-              [disabled]="isEditing()"
+              formControlName="gradeCode"
             />
           </div>
 
@@ -161,7 +162,7 @@ const GRADE_TYPES = [
             <label for="gradeType">Typ *</label>
             <p-select
               id="gradeType"
-              [(ngModel)]="formData.gradeType"
+              formControlName="gradeType"
               [options]="gradeTypes"
               optionLabel="label"
               optionValue="value"
@@ -171,14 +172,14 @@ const GRADE_TYPES = [
 
           <div class="form-field full-width">
             <label for="displayName">Bezeichnung</label>
-            <input pInputText id="displayName" [(ngModel)]="formData.displayName" />
+            <input pInputText id="displayName" formControlName="displayName" />
           </div>
 
           <div class="form-field">
             <label for="monthlyValue">Monatswert (EUR) *</label>
             <p-inputNumber
               id="monthlyValue"
-              [(ngModel)]="formData.monthlyValue"
+              formControlName="monthlyValue"
               mode="currency"
               currency="EUR"
               locale="de-DE"
@@ -187,14 +188,14 @@ const GRADE_TYPES = [
 
           <div class="form-field">
             <label for="sortOrder">Sortierung</label>
-            <p-inputNumber id="sortOrder" [(ngModel)]="formData.sortOrder" />
+            <p-inputNumber id="sortOrder" formControlName="sortOrder" />
           </div>
 
           <div class="form-field">
             <label for="minSalary">Min. Gehalt (EUR)</label>
             <p-inputNumber
               id="minSalary"
-              [(ngModel)]="formData.minSalary"
+              formControlName="minSalary"
               mode="currency"
               currency="EUR"
               locale="de-DE"
@@ -205,7 +206,7 @@ const GRADE_TYPES = [
             <label for="maxSalary">Max. Gehalt (EUR)</label>
             <p-inputNumber
               id="maxSalary"
-              [(ngModel)]="formData.maxSalary"
+              formControlName="maxSalary"
               mode="currency"
               currency="EUR"
               locale="de-DE"
@@ -213,7 +214,12 @@ const GRADE_TYPES = [
           </div>
 
           <div class="form-field full-width">
-            <p-checkbox [(ngModel)]="formData.active" [binary]="true" inputId="active" />
+            <p-checkbox
+              [modelValue]="activeValue()"
+              (onChange)="onActiveChange($event)"
+              [binary]="true"
+              inputId="active"
+            />
             <label for="active" class="checkbox-label">Aktiv</label>
           </div>
         </div>
@@ -331,6 +337,8 @@ export class GradeValuesAdminComponent implements OnInit {
   private readonly gradeValueService = inject(GradeValueService);
   private readonly confirmationService = inject(ConfirmationService);
   private readonly messageService = inject(MessageService);
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly fb = inject(NonNullableFormBuilder);
 
   readonly gradeValues = signal<GradeValue[]>([]);
   readonly loading = signal(false);
@@ -340,9 +348,40 @@ export class GradeValuesAdminComponent implements OnInit {
   readonly isEditing = computed(() => this.editingId() !== null);
   readonly gradeTypes = GRADE_TYPES;
 
-  formData: GradeValueFormData = this.getEmptyFormData();
+  // Reactive form for grade value dialog
+  readonly gradeForm = this.fb.group({
+    gradeCode: '',
+    gradeType: 'E',
+    displayName: '',
+    monthlyValue: null as number | null,
+    minSalary: null as number | null,
+    maxSalary: null as number | null,
+    sortOrder: null as number | null,
+  });
+
+  // Track active checkbox separately as a signal (boolean checkbox with PrimeNG)
+  readonly activeValue = signal(true);
+
+  // Signal-based form values for computed validity
+  private readonly formValues = signal({ gradeCode: '', gradeType: 'E', monthlyValue: null as number | null });
+  readonly isFormValid = computed(() => {
+    const values = this.formValues();
+    return !!values.gradeCode && !!values.gradeType && values.monthlyValue !== null;
+  });
 
   ngOnInit(): void {
+    // Sync form value changes to signal
+    this.gradeForm.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => {
+        const raw = this.gradeForm.getRawValue();
+        this.formValues.set({
+          gradeCode: raw.gradeCode ?? '',
+          gradeType: raw.gradeType ?? '',
+          monthlyValue: raw.monthlyValue ?? null,
+        });
+      });
+
     this.loadGradeValues();
   }
 
@@ -365,13 +404,23 @@ export class GradeValuesAdminComponent implements OnInit {
   }
 
   openCreateDialog(): void {
-    this.formData = this.getEmptyFormData();
+    this.gradeForm.reset({
+      gradeCode: '',
+      gradeType: 'E',
+      displayName: '',
+      monthlyValue: null,
+      minSalary: null,
+      maxSalary: null,
+      sortOrder: null,
+    });
+    this.gradeForm.controls.gradeCode.enable();
+    this.activeValue.set(true);
     this.editingId.set(null);
     this.dialogVisible.set(true);
   }
 
   openEditDialog(grade: GradeValue): void {
-    this.formData = {
+    this.gradeForm.patchValue({
       gradeCode: grade.gradeCode,
       gradeType: grade.gradeType ?? 'E',
       displayName: grade.displayName ?? '',
@@ -379,8 +428,9 @@ export class GradeValuesAdminComponent implements OnInit {
       minSalary: grade.minSalary,
       maxSalary: grade.maxSalary,
       sortOrder: grade.sortOrder,
-      active: grade.active,
-    };
+    });
+    this.gradeForm.controls.gradeCode.disable();
+    this.activeValue.set(grade.active);
     this.editingId.set(grade.id);
     this.dialogVisible.set(true);
   }
@@ -390,24 +440,23 @@ export class GradeValuesAdminComponent implements OnInit {
     this.editingId.set(null);
   }
 
-  isFormValid(): boolean {
-    return (
-      !!this.formData.gradeCode && !!this.formData.gradeType && this.formData.monthlyValue !== null
-    );
+  onActiveChange(event: CheckboxChangeEvent): void {
+    this.activeValue.set(event.checked as boolean);
   }
 
   saveGradeValue(): void {
     if (!this.isFormValid()) return;
 
+    const formValue = this.gradeForm.getRawValue();
     const data = {
-      gradeCode: this.formData.gradeCode,
-      gradeType: this.formData.gradeType,
-      displayName: this.formData.displayName || null,
-      monthlyValue: this.formData.monthlyValue,
-      minSalary: this.formData.minSalary,
-      maxSalary: this.formData.maxSalary,
-      sortOrder: this.formData.sortOrder,
-      active: this.formData.active,
+      gradeCode: formValue.gradeCode,
+      gradeType: formValue.gradeType,
+      displayName: formValue.displayName || null,
+      monthlyValue: formValue.monthlyValue,
+      minSalary: formValue.minSalary,
+      maxSalary: formValue.maxSalary,
+      sortOrder: formValue.sortOrder,
+      active: this.activeValue(),
     };
 
     const editId = this.editingId();
@@ -481,18 +530,5 @@ export class GradeValuesAdminComponent implements OnInit {
         });
       },
     });
-  }
-
-  private getEmptyFormData(): GradeValueFormData {
-    return {
-      gradeCode: '',
-      gradeType: 'E',
-      displayName: '',
-      monthlyValue: null,
-      minSalary: null,
-      maxSalary: null,
-      sortOrder: null,
-      active: true,
-    };
   }
 }

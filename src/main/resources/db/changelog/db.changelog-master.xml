@@ -10,5 +10,6 @@
     <include file="db/changelog/003-research-group-extensions.xml"/>
     <include file="db/changelog/004-professor-keycloak-mapping.xml"/>
     <include file="db/changelog/005-user-last-login.xml"/>
+    <include file="db/changelog/006-unique-university-id.xml"/>
 
 </databaseChangeLog>

@@ -64,7 +64,7 @@ export class SecurityStore {
     return this.user()?.roles.includes(role) ?? false;
   }
 
-  private async fetchUser(): Promise<void> {
+  async fetchUser(): Promise<void> {
     try {
       const user = await firstValueFrom(this.http.get<User>(`${environment.apiUrl}/v2/users/me`));
       this.user.set(user);

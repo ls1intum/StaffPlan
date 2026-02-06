@@ -11,6 +11,7 @@ import de.tum.cit.aet.usermanagement.dto.ResearchGroupImportResultDTO;
 import de.tum.cit.aet.usermanagement.repository.ResearchGroupRepository;
 import de.tum.cit.aet.usermanagement.repository.UserGroupRepository;
 import de.tum.cit.aet.usermanagement.repository.UserRepository;
+import de.tum.cit.aet.util.CsvParser;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -21,7 +22,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -196,13 +196,10 @@ public class ResearchGroupService {
                 return result.build();
             }
 
-            // Remove BOM if present
-            if (headerLine.startsWith("\uFEFF")) {
-                headerLine = headerLine.substring(1);
-            }
+            headerLine = CsvParser.stripBom(headerLine);
 
-            char delimiter = detectDelimiter(headerLine);
-            String[] headers = parseCsvLine(headerLine, delimiter);
+            char delimiter = CsvParser.detectDelimiter(headerLine);
+            String[] headers = CsvParser.parseLine(headerLine, delimiter);
             Map<String, Integer> headerIndices = mapHeaderIndices(headers);
 
             String line;
@@ -213,7 +210,7 @@ public class ResearchGroupService {
                     continue;
                 }
                 try {
-                    String[] values = parseCsvLine(line, delimiter);
+                    String[] values = CsvParser.parseLine(line, delimiter);
                     processImportRecord(values, headerIndices, result, lineNumber);
                 } catch (Exception e) {
                     log.warn("Failed to import line {}: {}", lineNumber, e.getMessage());
@@ -229,32 +226,6 @@ public class ResearchGroupService {
         log.info("CSV import completed: created={}, updated={}, skipped={}, errors={}",
                 importResult.created(), importResult.updated(), importResult.skipped(), importResult.errors().size());
         return importResult;
-    }
-
-    private char detectDelimiter(String headerLine) {
-        int semicolons = headerLine.length() - headerLine.replace(";", "").length();
-        int commas = headerLine.length() - headerLine.replace(",", "").length();
-        return semicolons > commas ? ';' : ',';
-    }
-
-    private String[] parseCsvLine(String line, char delimiter) {
-        List<String> fields = new ArrayList<>();
-        StringBuilder current = new StringBuilder();
-        boolean inQuotes = false;
-
-        for (char c : line.toCharArray()) {
-            if (c == '"') {
-                inQuotes = !inQuotes;
-            } else if (c == delimiter && !inQuotes) {
-                fields.add(current.toString().trim());
-                current = new StringBuilder();
-            } else {
-                current.append(c);
-            }
-        }
-        fields.add(current.toString().trim());
-
-        return fields.toArray(new String[0]);
     }
 
     private Map<String, Integer> mapHeaderIndices(String[] headers) {

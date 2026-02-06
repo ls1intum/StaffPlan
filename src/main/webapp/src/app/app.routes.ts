@@ -53,4 +53,9 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./features/legal/privacy.component').then((m) => m.PrivacyComponent),
   },
+  {
+    path: '**',
+    loadComponent: () =>
+      import('./features/not-found/not-found.component').then((m) => m.NotFoundComponent),
+  },
 ];

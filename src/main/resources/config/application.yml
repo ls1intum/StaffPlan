@@ -83,12 +83,3 @@ staffplan:
       confidence-threshold: 0.7
     file-clustering:
       enabled: false
-
-artemis:
-  baseUrl: 
-  username: 
-  password: 
-  jwtToken: 
-  exerciseId: 424
-  gitRepoPath: Projects/itp2526teamprojects
-  numThreads: 8

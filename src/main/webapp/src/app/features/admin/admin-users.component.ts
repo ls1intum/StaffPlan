@@ -1,17 +1,19 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  computed,
   DestroyRef,
   inject,
   OnInit,
   signal,
+  ViewEncapsulation,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { FormsModule } from '@angular/forms';
+import { NonNullableFormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';
-import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
+import { debounceTime, distinctUntilChanged } from 'rxjs';
 import { TableModule, TableLazyLoadEvent } from 'primeng/table';
-import { Checkbox } from 'primeng/checkbox';
+import { Checkbox, CheckboxChangeEvent } from 'primeng/checkbox';
 import { Button } from 'primeng/button';
 import { Tag } from 'primeng/tag';
 import { Tooltip } from 'primeng/tooltip';
@@ -42,28 +44,10 @@ const ROLE_OPTIONS = [
   { label: 'Mitarbeiter', value: 'employee' },
 ];
 
-interface CreateUserFormData {
-  universityId: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  roles: Set<string>;
-}
-
-function getEmptyFormData(): CreateUserFormData {
-  return {
-    universityId: '',
-    email: '',
-    firstName: '',
-    lastName: '',
-    roles: new Set<string>(),
-  };
-}
-
 @Component({
   selector: 'app-admin-users',
   imports: [
-    FormsModule,
+    ReactiveFormsModule,
     DatePipe,
     TableModule,
     Checkbox,
@@ -90,14 +74,12 @@ function getEmptyFormData(): CreateUserFormData {
               pInputText
               type="text"
               placeholder="Suchen..."
-              [ngModel]="searchTerm()"
-              (ngModelChange)="onSearchChange($event)"
+              [formControl]="searchControl"
             />
           </p-iconfield>
           <p-select
             [options]="roleOptions"
-            [ngModel]="filterRole()"
-            (ngModelChange)="onRoleFilterChange($event)"
+            [formControl]="roleFilterControl"
             optionLabel="label"
             optionValue="value"
             placeholder="Rolle filtern"
@@ -165,8 +147,8 @@ function getEmptyFormData(): CreateUserFormData {
                     <div class="role-checkbox">
                       <p-checkbox
                         [binary]="true"
-                        [ngModel]="hasRole(user, role)"
-                        (ngModelChange)="toggleRole(user, role, $event)"
+                        [modelValue]="hasRole(user, role)"
+                        (onChange)="toggleRole(user, role, $event)"
                         [inputId]="user.id + '-' + role"
                       />
                       <label [for]="user.id + '-' + role">{{ formatRole(role) }}</label>
@@ -211,15 +193,14 @@ function getEmptyFormData(): CreateUserFormData {
       [modal]="true"
       [style]="{ width: '500px' }"
     >
-      <div class="form-grid">
+      <div class="form-grid" [formGroup]="createForm">
         <div class="form-field">
           <label for="create-universityId">Kennung *</label>
           <input
             pInputText
             id="create-universityId"
-            [(ngModel)]="formData.universityId"
+            formControlName="universityId"
             placeholder="z.B. ab12cde"
-            required
           />
         </div>
         <div class="form-field">
@@ -227,9 +208,8 @@ function getEmptyFormData(): CreateUserFormData {
           <input
             pInputText
             id="create-firstName"
-            [(ngModel)]="formData.firstName"
+            formControlName="firstName"
             placeholder="Vorname"
-            required
           />
         </div>
         <div class="form-field">
@@ -237,9 +217,8 @@ function getEmptyFormData(): CreateUserFormData {
           <input
             pInputText
             id="create-lastName"
-            [(ngModel)]="formData.lastName"
+            formControlName="lastName"
             placeholder="Nachname"
-            required
           />
         </div>
         <div class="form-field">
@@ -248,7 +227,7 @@ function getEmptyFormData(): CreateUserFormData {
             pInputText
             id="create-email"
             type="email"
-            [(ngModel)]="formData.email"
+            formControlName="email"
             placeholder="E-Mail-Adresse"
           />
         </div>
@@ -259,8 +238,8 @@ function getEmptyFormData(): CreateUserFormData {
               <div class="role-checkbox">
                 <p-checkbox
                   [binary]="true"
-                  [ngModel]="formData.roles.has(role)"
-                  (ngModelChange)="toggleFormRole(role, $event)"
+                  [modelValue]="formRoles().has(role)"
+                  (onChange)="toggleFormRole(role, $event)"
                   [inputId]="'create-role-' + role"
                 />
                 <label [for]="'create-role-' + role">{{ formatRole(role) }}</label>
@@ -331,7 +310,7 @@ function getEmptyFormData(): CreateUserFormData {
       gap: 0.5rem;
     }
 
-    :host ::ng-deep .role-filter {
+    .role-filter {
       width: 180px;
     }
 
@@ -397,6 +376,7 @@ function getEmptyFormData(): CreateUserFormData {
     }
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
+  encapsulation: ViewEncapsulation.None,
 })
 export class AdminUsersComponent implements OnInit {
   private readonly userService = inject(UserService);
@@ -404,8 +384,7 @@ export class AdminUsersComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
   private readonly confirmationService = inject(ConfirmationService);
   private readonly messageService = inject(MessageService);
-
-  private readonly searchSubject = new Subject<string>();
+  private readonly fb = inject(NonNullableFormBuilder);
 
   readonly users = signal<UserDTO[]>([]);
   readonly loading = signal(false);
@@ -415,17 +394,42 @@ export class AdminUsersComponent implements OnInit {
   readonly searchTerm = signal('');
   readonly filterRole = signal<string | null>(null);
 
-  dialogVisible = false;
-  formData: CreateUserFormData = getEmptyFormData();
+  // Reactive form controls for filters
+  readonly searchControl = this.fb.control('');
+  readonly roleFilterControl = this.fb.control<string | null>(null);
+
+  // Reactive form for create dialog
+  readonly createForm = this.fb.group({
+    universityId: '',
+    firstName: '',
+    lastName: '',
+    email: '',
+  });
+
+  // Track roles separately as a signal (Set is not compatible with FormControl)
+  readonly formRoles = signal(new Set<string>());
+
+  // Signal-based form validity tracking
+  private readonly createFormValues = signal({ universityId: '', firstName: '', lastName: '', email: '' });
+  readonly isFormValid = computed(() => {
+    const values = this.createFormValues();
+    return (
+      values.universityId.trim().length > 0 &&
+      values.firstName.trim().length > 0 &&
+      values.lastName.trim().length > 0
+    );
+  });
+
+  readonly dialogVisible = signal(false);
 
   readonly availableRoles = AVAILABLE_ROLES;
   readonly roleOptions = ROLE_OPTIONS;
 
-  private pendingChanges = new Map<string, Set<string>>();
+  private readonly pendingChanges = signal(new Map<string, Set<string>>());
 
   ngOnInit(): void {
-    // Set up debounced search
-    this.searchSubject
+    // Set up debounced search from reactive form control
+    this.searchControl.valueChanges
       .pipe(debounceTime(300), distinctUntilChanged(), takeUntilDestroyed(this.destroyRef))
       .subscribe((term) => {
         this.searchTerm.set(term);
@@ -433,16 +437,27 @@ export class AdminUsersComponent implements OnInit {
         this.loadUsers();
       });
 
-    this.loadUsers();
-  }
+    // Set up role filter from reactive form control
+    this.roleFilterControl.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((role) => {
+        this.filterRole.set(role);
+        this.currentPage.set(0);
+        this.loadUsers();
+      });
 
-  onSearchChange(term: string): void {
-    this.searchSubject.next(term);
-  }
+    // Sync create form value changes to the signal for computed validity
+    this.createForm.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((values) => {
+        this.createFormValues.set({
+          universityId: values.universityId ?? '',
+          firstName: values.firstName ?? '',
+          lastName: values.lastName ?? '',
+          email: values.email ?? '',
+        });
+      });
 
-  onRoleFilterChange(role: string | null): void {
-    this.filterRole.set(role);
-    this.currentPage.set(0);
     this.loadUsers();
   }
 
@@ -468,10 +483,10 @@ export class AdminUsersComponent implements OnInit {
         next: (response) => {
           this.users.set(response.content);
           this.totalRecords.set(response.totalElements);
-          // Initialize pending changes with current roles
-          response.content.forEach((user) => {
-            this.pendingChanges.set(user.id, new Set(user.roles));
-          });
+          // Initialize pending changes with current roles (replace entirely for current page)
+          this.pendingChanges.set(
+            new Map(response.content.map((user) => [user.id, new Set(user.roles)])),
+          );
           this.loading.set(false);
         },
         error: () => {
@@ -481,21 +496,26 @@ export class AdminUsersComponent implements OnInit {
   }
 
   hasRole(user: UserDTO, role: string): boolean {
-    return this.pendingChanges.get(user.id)?.has(role) ?? false;
+    return this.pendingChanges().get(user.id)?.has(role) ?? false;
   }
 
-  toggleRole(user: UserDTO, role: string, checked: boolean): void {
-    const roles = this.pendingChanges.get(user.id) ?? new Set<string>();
-    if (checked) {
-      roles.add(role);
-    } else {
-      roles.delete(role);
-    }
-    this.pendingChanges.set(user.id, roles);
+  toggleRole(user: UserDTO, role: string, event: CheckboxChangeEvent): void {
+    const checked = event.checked as boolean;
+    this.pendingChanges.update((map) => {
+      const updated = new Map(map);
+      const roles = new Set(updated.get(user.id) ?? []);
+      if (checked) {
+        roles.add(role);
+      } else {
+        roles.delete(role);
+      }
+      updated.set(user.id, roles);
+      return updated;
+    });
   }
 
   hasChanges(user: UserDTO): boolean {
-    const pending = this.pendingChanges.get(user.id);
+    const pending = this.pendingChanges().get(user.id);
     if (!pending) return false;
 
     const original = new Set(user.roles);
@@ -508,22 +528,26 @@ export class AdminUsersComponent implements OnInit {
   }
 
   saveUser(user: UserDTO): void {
-    const roles = Array.from(this.pendingChanges.get(user.id) ?? []);
+    const roles = Array.from(this.pendingChanges().get(user.id) ?? []);
     this.userService.updateUserRoles(user.id, roles).subscribe({
       next: (updatedUser) => {
         // Update the user in the list
         this.users.update((users) => users.map((u) => (u.id === updatedUser.id ? updatedUser : u)));
         // Update pending changes to match saved state
-        this.pendingChanges.set(updatedUser.id, new Set(updatedUser.roles));
+        this.pendingChanges.update((map) => {
+          const updated = new Map(map);
+          updated.set(updatedUser.id, new Set(updatedUser.roles));
+          return updated;
+        });
         this.messageService.add({
           severity: 'success',
           summary: 'Erfolg',
           detail: 'Benutzerrollen wurden aktualisiert',
         });
 
-        // If the current user's roles were updated, refresh the page to update permissions
+        // If the current user's roles were updated, re-fetch user data to update permissions
         if (updatedUser.id === this.securityStore.user()?.id) {
-          window.location.reload();
+          this.securityStore.fetchUser();
         }
       },
       error: () => {
@@ -537,41 +561,40 @@ export class AdminUsersComponent implements OnInit {
   }
 
   openCreateDialog(): void {
-    this.formData = getEmptyFormData();
-    this.dialogVisible = true;
+    this.createForm.reset();
+    this.formRoles.set(new Set<string>());
+    this.dialogVisible.set(true);
   }
 
   closeDialog(): void {
-    this.dialogVisible = false;
+    this.dialogVisible.set(false);
   }
 
-  isFormValid(): boolean {
-    return (
-      this.formData.universityId.trim().length > 0 &&
-      this.formData.firstName.trim().length > 0 &&
-      this.formData.lastName.trim().length > 0
-    );
-  }
-
-  toggleFormRole(role: string, checked: boolean): void {
-    if (checked) {
-      this.formData.roles.add(role);
-    } else {
-      this.formData.roles.delete(role);
-    }
+  toggleFormRole(role: string, event: CheckboxChangeEvent): void {
+    const checked = event.checked as boolean;
+    this.formRoles.update((roles) => {
+      const updated = new Set(roles);
+      if (checked) {
+        updated.add(role);
+      } else {
+        updated.delete(role);
+      }
+      return updated;
+    });
   }
 
   createUser(): void {
+    const formValue = this.createForm.getRawValue();
     const dto: CreateUserDTO = {
-      universityId: this.formData.universityId.trim(),
-      email: this.formData.email.trim(),
-      firstName: this.formData.firstName.trim(),
-      lastName: this.formData.lastName.trim(),
-      roles: Array.from(this.formData.roles),
+      universityId: formValue.universityId.trim(),
+      email: formValue.email.trim(),
+      firstName: formValue.firstName.trim(),
+      lastName: formValue.lastName.trim(),
+      roles: Array.from(this.formRoles()),
     };
     this.userService.createUser(dto).subscribe({
       next: () => {
-        this.dialogVisible = false;
+        this.dialogVisible.set(false);
         this.messageService.add({
           severity: 'success',
           summary: 'Erfolg',

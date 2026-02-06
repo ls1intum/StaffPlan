@@ -5,6 +5,7 @@ import {
   inject,
   OnInit,
   signal,
+  ViewEncapsulation,
 } from '@angular/core';
 import { Button } from 'primeng/button';
 import { ConfirmDialog } from 'primeng/confirmdialog';
@@ -101,7 +102,7 @@ import { Position } from './position.model';
       }
     }
 
-    :host ::ng-deep .compact-btn {
+    .compact-btn {
       font-size: 0.65rem !important;
       padding: 0.25rem 0.5rem !important;
       height: 1.5rem;
@@ -112,6 +113,7 @@ import { Position } from './position.model';
     }
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
+  encapsulation: ViewEncapsulation.None,
 })
 export class PositionsPageComponent implements OnInit {
   private readonly positionService = inject(PositionService);

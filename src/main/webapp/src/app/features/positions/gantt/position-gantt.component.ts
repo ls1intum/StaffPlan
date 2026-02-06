@@ -7,6 +7,7 @@ import {
   input,
   output,
   signal,
+  ViewEncapsulation,
 } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -119,7 +120,7 @@ type ZoomLevel = 3 | 6 | 12 | 24 | 36 | 60;
       }
     }
 
-    :host ::ng-deep .filter-bar {
+    .filter-bar {
       .p-select {
         font-size: 0.65rem;
         height: 1.5rem;
@@ -165,7 +166,7 @@ type ZoomLevel = 3 | 6 | 12 | 24 | 36 | 60;
       }
     }
 
-    :host ::ng-deep .checkbox-item .p-checkbox {
+    .checkbox-item .p-checkbox {
       width: 0.85rem;
       height: 0.85rem;
 
@@ -188,7 +189,7 @@ type ZoomLevel = 3 | 6 | 12 | 24 | 36 | 60;
       }
     }
 
-    :host ::ng-deep .filter-date-item .p-datepicker {
+    .filter-date-item .p-datepicker {
       font-size: 0.65rem;
       height: 1.5rem;
 
@@ -260,7 +261,7 @@ type ZoomLevel = 3 | 6 | 12 | 24 | 36 | 60;
       z-index: 1;
     }
 
-    :host ::ng-deep .timeline-slider-container {
+    .timeline-slider-container {
       .p-slider {
         height: 3px;
         background: var(--p-surface-300);
@@ -693,6 +694,7 @@ type ZoomLevel = 3 | 6 | 12 | 24 | 36 | 60;
     }
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
+  encapsulation: ViewEncapsulation.None,
 })
 export class PositionGanttComponent {
   private readonly securityStore = inject(SecurityStore);

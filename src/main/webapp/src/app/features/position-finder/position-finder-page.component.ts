@@ -1,5 +1,14 @@
-import { ChangeDetectionStrategy, Component, inject, signal, computed } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  inject,
+  OnInit,
+  signal,
+  computed,
+} from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { NonNullableFormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { CurrencyPipe, DatePipe, DecimalPipe } from '@angular/common';
 import { Card } from 'primeng/card';
 import { Button } from 'primeng/button';
@@ -21,7 +30,7 @@ import { GradeValue } from '../admin/grade-values/grade-value.model';
 @Component({
   selector: 'app-position-finder-page',
   imports: [
-    FormsModule,
+    ReactiveFormsModule,
     CurrencyPipe,
     DatePipe,
     DecimalPipe,
@@ -48,13 +57,13 @@ import { GradeValue } from '../admin/grade-values/grade-value.model';
           </div>
         </ng-template>
 
-        <div class="search-form">
+        <div class="search-form" [formGroup]="searchForm">
           <div class="form-row">
             <div class="form-field">
               <label for="grade">Besoldungsgruppe *</label>
               <p-select
                 id="grade"
-                [(ngModel)]="selectedGrade"
+                formControlName="selectedGrade"
                 [options]="gradeOptions()"
                 optionLabel="label"
                 optionValue="value"
@@ -68,7 +77,7 @@ import { GradeValue } from '../admin/grade-values/grade-value.model';
               <label for="percentage">Besetzungsgrad *</label>
               <p-inputNumber
                 id="percentage"
-                [(ngModel)]="fillPercentage"
+                formControlName="fillPercentage"
                 [min]="1"
                 [max]="100"
                 suffix="%"
@@ -80,7 +89,7 @@ import { GradeValue } from '../admin/grade-values/grade-value.model';
               <label for="startDate">Startdatum *</label>
               <p-datepicker
                 id="startDate"
-                [(ngModel)]="startDate"
+                formControlName="startDate"
                 dateFormat="dd.mm.yy"
                 [style]="{ width: '100%' }"
               />
@@ -90,7 +99,7 @@ import { GradeValue } from '../admin/grade-values/grade-value.model';
               <label for="endDate">Enddatum *</label>
               <p-datepicker
                 id="endDate"
-                [(ngModel)]="endDate"
+                formControlName="endDate"
                 dateFormat="dd.mm.yy"
                 [style]="{ width: '100%' }"
               />
@@ -102,7 +111,7 @@ import { GradeValue } from '../admin/grade-values/grade-value.model';
               <label for="relevanceTypes">Relevanzart</label>
               <p-multiselect
                 id="relevanceTypes"
-                [(ngModel)]="selectedRelevanceTypes"
+                formControlName="selectedRelevanceTypes"
                 [options]="relevanceTypeOptions()"
                 optionLabel="label"
                 optionValue="value"
@@ -662,10 +671,12 @@ import { GradeValue } from '../admin/grade-values/grade-value.model';
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class PositionFinderPageComponent {
+export class PositionFinderPageComponent implements OnInit {
   private readonly positionFinderService = inject(PositionFinderService);
   private readonly gradeValueService = inject(GradeValueService);
   private readonly messageService = inject(MessageService);
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly fb = inject(NonNullableFormBuilder);
 
   readonly grades = signal<GradeValue[]>([]);
   readonly relevanceTypes = signal<string[]>([]);
@@ -675,11 +686,34 @@ export class PositionFinderPageComponent {
   readonly lastSearchEndDate = signal<Date | null>(null);
   readonly lastSearchRelevanceTypes = signal<string[]>([]);
 
-  selectedGrade = '';
-  fillPercentage = 50;
-  startDate: Date | null = null;
-  endDate: Date | null = null;
-  selectedRelevanceTypes: string[] = [];
+  // Reactive form for search criteria
+  readonly searchForm = this.fb.group({
+    selectedGrade: '',
+    fillPercentage: 50 as number,
+    startDate: null as Date | null,
+    endDate: null as Date | null,
+    selectedRelevanceTypes: [] as string[],
+  });
+
+  // Signal-based form values for computed validity
+  private readonly formValues = signal({
+    selectedGrade: '',
+    fillPercentage: 50 as number,
+    startDate: null as Date | null,
+    endDate: null as Date | null,
+  });
+
+  readonly isFormValid = computed(() => {
+    const values = this.formValues();
+    return (
+      !!values.selectedGrade &&
+      values.fillPercentage >= 1 &&
+      values.fillPercentage <= 100 &&
+      values.startDate !== null &&
+      values.endDate !== null &&
+      values.startDate <= values.endDate
+    );
+  });
 
   readonly gradeOptions = computed(() =>
     this.grades()
@@ -694,7 +728,19 @@ export class PositionFinderPageComponent {
     this.relevanceTypes().map((t) => ({ label: t, value: t })),
   );
 
-  constructor() {
+  ngOnInit(): void {
+    // Sync form value changes to signal for computed validity
+    this.searchForm.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((values) => {
+        this.formValues.set({
+          selectedGrade: values.selectedGrade ?? '',
+          fillPercentage: values.fillPercentage ?? 50,
+          startDate: values.startDate ?? null,
+          endDate: values.endDate ?? null,
+        });
+      });
+
     this.loadGrades();
     this.loadRelevanceTypes();
   }
@@ -725,34 +771,28 @@ export class PositionFinderPageComponent {
     });
   }
 
-  isFormValid(): boolean {
-    return (
-      !!this.selectedGrade &&
-      this.fillPercentage >= 1 &&
-      this.fillPercentage <= 100 &&
-      this.startDate !== null &&
-      this.endDate !== null &&
-      this.startDate <= this.endDate
-    );
-  }
-
   search(): void {
-    if (!this.isFormValid() || !this.startDate || !this.endDate) return;
+    if (!this.isFormValid()) return;
+
+    const formValue = this.searchForm.getRawValue();
+    const startDate = formValue.startDate;
+    const endDate = formValue.endDate;
+    if (!startDate || !endDate) return;
 
     this.searching.set(true);
     this.searchResult.set(null);
 
     // Store search parameters for display in results
-    this.lastSearchStartDate.set(this.startDate);
-    this.lastSearchEndDate.set(this.endDate);
-    this.lastSearchRelevanceTypes.set([...this.selectedRelevanceTypes]);
+    this.lastSearchStartDate.set(startDate);
+    this.lastSearchEndDate.set(endDate);
+    this.lastSearchRelevanceTypes.set([...formValue.selectedRelevanceTypes]);
 
     const request = {
-      startDate: this.formatDate(this.startDate),
-      endDate: this.formatDate(this.endDate),
-      employeeGrade: this.selectedGrade,
-      fillPercentage: this.fillPercentage,
-      relevanceTypes: this.selectedRelevanceTypes.length > 0 ? this.selectedRelevanceTypes : null,
+      startDate: this.formatDate(startDate),
+      endDate: this.formatDate(endDate),
+      employeeGrade: formValue.selectedGrade,
+      fillPercentage: formValue.fillPercentage,
+      relevanceTypes: formValue.selectedRelevanceTypes.length > 0 ? formValue.selectedRelevanceTypes : null,
     };
 
     this.positionFinderService.search(request).subscribe({

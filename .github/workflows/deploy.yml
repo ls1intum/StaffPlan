@@ -10,6 +10,7 @@ on:
       commit_sha:
         description: 'Commit SHA to deploy'
         required: false
+        type: string
       environment_name:
         description: 'Which environment to deploy'
         required: true

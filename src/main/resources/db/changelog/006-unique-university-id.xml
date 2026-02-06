@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-5.0.xsd"
+                   objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
+
+    <changeSet id="006-1" author="staffplan">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists indexName="uk_users_university_id"/>
+            </not>
+        </preConditions>
+        <comment>Deduplicate university_id values and add unique constraint.
+            For each duplicate, keep the most recently updated user and re-point FK references.</comment>
+        <sql>
+            -- Create a temp table of surviving user_ids (one per university_id)
+            CREATE TEMP TABLE surviving_users AS
+            SELECT DISTINCT ON (university_id) user_id, university_id
+            FROM users
+            ORDER BY university_id, updated_at DESC NULLS LAST;
+
+            -- Re-point user_groups from duplicate users to the surviving user
+            UPDATE user_groups ug
+            SET user_id = su.user_id
+            FROM users u
+            JOIN surviving_users su ON su.university_id = u.university_id
+            WHERE ug.user_id = u.user_id
+              AND u.user_id != su.user_id;
+
+            -- Re-point research_groups FK columns from duplicate users to the surviving user
+            UPDATE research_groups rg
+            SET head_user_id = su.user_id
+            FROM users u
+            JOIN surviving_users su ON su.university_id = u.university_id
+            WHERE rg.head_user_id = u.user_id
+              AND u.user_id != su.user_id;
+
+            UPDATE research_groups rg
+            SET created_by = su.user_id
+            FROM users u
+            JOIN surviving_users su ON su.university_id = u.university_id
+            WHERE rg.created_by = u.user_id
+              AND u.user_id != su.user_id;
+
+            UPDATE research_groups rg
+            SET updated_by = su.user_id
+            FROM users u
+            JOIN surviving_users su ON su.university_id = u.university_id
+            WHERE rg.updated_by = u.user_id
+              AND u.user_id != su.user_id;
+
+            -- Delete duplicate user_groups that would violate PK after re-pointing
+            DELETE FROM user_groups ug
+            WHERE NOT EXISTS (
+                SELECT 1 FROM surviving_users su WHERE su.user_id = ug.user_id
+            );
+
+            -- Delete duplicate users (keep only survivors)
+            DELETE FROM users
+            WHERE user_id NOT IN (SELECT user_id FROM surviving_users);
+
+            DROP TABLE surviving_users;
+        </sql>
+        <addUniqueConstraint tableName="users"
+                             columnNames="university_id"
+                             constraintName="uk_users_university_id"/>
+    </changeSet>
+
+</databaseChangeLog>
