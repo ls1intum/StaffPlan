@@ -6,6 +6,7 @@ plugins {
     id 'jacoco'
     id 'com.diffplug.spotless' version '8.2.1'
     id 'com.github.ben-manes.versions' version '0.53.0'
+    id 'com.gorylenko.gradle-git-properties' version '2.5.2'
     id 'org.springframework.boot' version '4.0.2'
     id 'io.spring.dependency-management' version '1.1.7'
     id "com.github.node-gradle.node" version "7.1.0"
@@ -100,6 +101,15 @@ dependencies {
     testImplementation 'org.testcontainers:testcontainers-postgresql'
 
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+springBoot {
+    buildInfo()
+}
+
+gitProperties {
+    failOnNoGitDirectory = false
+    keys = ['git.branch', 'git.commit.id.abbrev', 'git.commit.time']
 }
 
 tasks.named('test') {
@@ -200,4 +210,3 @@ tasks.named("dependencyUpdates").configure {
 // 4) Apply Java code formatter:                    ./gradlew spotlessApply
 // 5) Check JavaDoc:                                ./gradlew checkstyleMain
 // 6) Find dependency updates:                      ./gradlew dependencyUpdates -Drevision=release
-

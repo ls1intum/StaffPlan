@@ -45,6 +45,10 @@
 
 <footer class="footer">
   <a routerLink="/impressum">Impressum</a>
+  @if (releaseLabel()) {
+    <span class="separator">|</span>
+    <a [href]="releasePageUrl" target="_blank" rel="noopener noreferrer">{{ releaseLabel() }}</a>
+  }
   <span class="separator">|</span>
   <a routerLink="/datenschutz">Datenschutz</a>
 </footer>
