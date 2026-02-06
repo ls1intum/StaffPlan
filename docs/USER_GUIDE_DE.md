@@ -1,8 +1,8 @@
-# StaffPlan Benutzerhandbuch
+# Position Manager Benutzerhandbuch
 
-Willkommen bei StaffPlan, einer Webanwendung für die strategische Personal- und Budgetplanung an Forschungseinrichtungen. Dieses Handbuch erklärt, wie Sie alle Funktionen von StaffPlan nutzen können - von der Anzeige von Stellen bis zur Verwaltung von Forschungsgruppen.
+Willkommen bei Position Manager, einer Webanwendung für die strategische Personal- und Budgetplanung an Forschungseinrichtungen. Dieses Handbuch erklärt, wie Sie alle Funktionen von Position Manager nutzen können - von der Anzeige von Stellen bis zur Verwaltung von Forschungsgruppen.
 
-**Für wen ist dieses Handbuch?** Alle StaffPlan-Benutzer, einschließlich Administratoren, Stellenverwalter, Professoren und Mitarbeiter. Jeder Abschnitt gibt an, welche Rollen Zugriff auf bestimmte Funktionen haben.
+**Für wen ist dieses Handbuch?** Alle Position Manager-Benutzer, einschließlich Administratoren, Stellenverwalter, Professoren und Mitarbeiter. Jeder Abschnitt gibt an, welche Rollen Zugriff auf bestimmte Funktionen haben.
 
 ## Inhaltsverzeichnis
 
@@ -22,7 +22,7 @@ Willkommen bei StaffPlan, einer Webanwendung für die strategische Personal- und
 
 ### Anmeldung
 
-1. Öffnen Sie StaffPlan in Ihrem Webbrowser
+1. Öffnen Sie Position Manager in Ihrem Webbrowser
 2. Klicken Sie auf die Schaltfläche **Anmelden** auf der Startseite
 3. Sie werden zur Universitäts-Anmeldeseite (Keycloak) weitergeleitet
 4. Geben Sie Ihre Universitäts-Anmeldedaten ein (TUM-ID und Passwort)
@@ -51,7 +51,7 @@ Die Menüpunkte, die Sie sehen, hängen von Ihrer zugewiesenen Rolle ab:
 
 ## Benutzerrollen verstehen
 
-StaffPlan hat vier Benutzerrollen mit unterschiedlichen Zugriffsebenen:
+Position Manager hat vier Benutzerrollen mit unterschiedlichen Zugriffsebenen:
 
 ### Administrator (Admin)
 
@@ -164,7 +164,7 @@ Die Stellensuche verwendet einen ausgeklügelten Matching-Algorithmus, um die be
 
 #### Schritt 1: Kandidatenstellen finden
 
-Zunächst identifiziert StaffPlan alle Stellen, die potenziell Ihren Mitarbeiter aufnehmen könnten:
+Zunächst identifiziert Position Manager alle Stellen, die potenziell Ihren Mitarbeiter aufnehmen könnten:
 
 1. **Gehaltsstufen-Abgleich**: Nur Stellen mit einer passenden oder höheren Gehaltsstufe werden berücksichtigt. Wenn Sie beispielsweise nach einem E13-Mitarbeiter suchen, werden sowohl E13- als auch E14-Stellen einbezogen (da E14 ein höheres Budget hat), aber E12-Stellen werden ausgeschlossen (unzureichendes Budget).
 
@@ -174,7 +174,7 @@ Zunächst identifiziert StaffPlan alle Stellen, die potenziell Ihren Mitarbeiter
 
 #### Schritt 2: Verfügbarkeit über den gesamten Zeitraum prüfen
 
-Dies ist der wichtigste Schritt. StaffPlan stellt sicher, dass die Stelle Ihren Mitarbeiter **für den gesamten Zeitraum** aufnehmen kann, nicht nur am Startdatum.
+Dies ist der wichtigste Schritt. Position Manager stellt sicher, dass die Stelle Ihren Mitarbeiter **für den gesamten Zeitraum** aufnehmen kann, nicht nur am Startdatum.
 
 **Warum das wichtig ist:** Eine Stelle könnte heute zu 80% verfügbar sein, aber in drei Monaten vollständig besetzt. Der Algorithmus prüft jedes Datum in Ihrem angeforderten Zeitraum und verwendet die **schlechteste Verfügbarkeit**, um sicherzustellen, dass Ihr Mitarbeiter einen garantierten Platz für die gesamte Vertragslaufzeit hat.
 
@@ -222,14 +222,14 @@ Stellen mit weniger bestehenden Mitarbeitern werden bevorzugt, da sie einfacher 
 
 #### Schritt 4: Aufteilungsvorschläge generieren
 
-Wenn keine einzelne Stelle Ihre Anforderungen erfüllen kann, schlägt StaffPlan **Kombinationen** von Stellen vor:
+Wenn keine einzelne Stelle Ihre Anforderungen erfüllen kann, schlägt Position Manager **Kombinationen** von Stellen vor:
 
 1. **Teilweise Übereinstimmungen finden**: Identifiziert alle Stellen mit verfügbarer Kapazität
 2. **Stellen kombinieren**: Testet Kombinationen von 2, 3 oder 4 Stellen
 3. **Kombinationen bewerten**: Sortiert nach wenigsten benötigten Stellen, dann nach minimalem Überschuss
 
 **Beispiel:** Sie benötigen 100% Beschäftigung, aber keine einzelne Stelle hat diese Kapazität.
-StaffPlan könnte vorschlagen: Stelle A (50%) + Stelle B (50%) = 100% gesamt
+Position Manager könnte vorschlagen: Stelle A (50%) + Stelle B (50%) = 100% gesamt
 
 Das System gibt bis zu 8 Vorschläge zurück und bevorzugt:
 - Weniger Stellen (2 Aufteilungen besser als 3)
@@ -511,7 +511,7 @@ A: Häufige Gründe:
 
 **F: Was ist ein "Aufteilungsvorschlag"?**
 
-A: Wenn keine einzelne Stelle Ihre Anforderungen erfüllen kann, schlägt StaffPlan vor, mehrere Teilstellen zu kombinieren. Zum Beispiel könnten zwei 50%-Stellen einen 100%-Bedarf decken. Der Algorithmus:
+A: Wenn keine einzelne Stelle Ihre Anforderungen erfüllen kann, schlägt Position Manager vor, mehrere Teilstellen zu kombinieren. Zum Beispiel könnten zwei 50%-Stellen einen 100%-Bedarf decken. Der Algorithmus:
 - Testet Kombinationen von 2, 3 und 4 Stellen
 - Filtert diejenigen, die Ihre Gesamtprozentanforderung erfüllen
 - Rangiert sie nach wenigsten benötigten Stellen und minimalem Überschuss
@@ -565,7 +565,7 @@ A: Es gibt drei Möglichkeiten:
 
 **F: Welche Browser werden unterstützt?**
 
-A: StaffPlan funktioniert am besten mit:
+A: Position Manager funktioniert am besten mit:
 - Google Chrome (empfohlen)
 - Mozilla Firefox
 - Microsoft Edge
@@ -586,7 +586,7 @@ A: Ihre Anmeldesitzung ist abgelaufen. Aktualisieren Sie einfach die Seite und m
 
 ## Schnelle Tipps
 
-- **Setzen Sie ein Lesezeichen für die Anwendung**: Speichern Sie die StaffPlan-URL für einfachen Zugriff
+- **Setzen Sie ein Lesezeichen für die Anwendung**: Speichern Sie die Position Manager-URL für einfachen Zugriff
 - **Verwenden Sie Filter**: Wenn Seiten langsam laden, verwenden Sie Filter, um die angezeigten Daten zu reduzieren
 - **Überprüfen Sie Ihre Rolle**: Wenn Sie erwartete Funktionen nicht sehen können, überprüfen Sie bei einem Administrator, ob Ihre Rolle korrekt ist
 - **Browser-Cache leeren**: Wenn Sie Anzeigeprobleme haben, versuchen Sie, den Cache und die Cookies Ihres Browsers zu löschen

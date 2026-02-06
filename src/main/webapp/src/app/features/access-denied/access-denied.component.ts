@@ -14,7 +14,7 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
         <p>
           Bitte kontaktieren Sie
           <a href="mailto:krusche&#64;tum.de">Prof. Dr. Stephan Krusche</a>, wenn Sie Zugang zu
-          StaffPlan benötigen.
+          Position Manager benötigen.
         </p>
       </div>
     </div>

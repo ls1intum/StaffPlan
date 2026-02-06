@@ -1,8 +1,8 @@
-# StaffPlan User Guide
+# Position Manager User Guide
 
-Welcome to StaffPlan, a web application for strategic staff and budget planning at research institutions. This guide explains how to use all features of StaffPlan, from viewing positions to managing research groups.
+Welcome to Position Manager, a web application for strategic staff and budget planning at research institutions. This guide explains how to use all features of Position Manager, from viewing positions to managing research groups.
 
-**Who is this guide for?** All StaffPlan users, including administrators, job managers, professors, and employees. Each section notes which roles have access to specific features.
+**Who is this guide for?** All Position Manager users, including administrators, job managers, professors, and employees. Each section notes which roles have access to specific features.
 
 ## Table of Contents
 
@@ -22,7 +22,7 @@ Welcome to StaffPlan, a web application for strategic staff and budget planning 
 
 ### Logging In
 
-1. Open StaffPlan in your web browser
+1. Open Position Manager in your web browser
 2. Click the **Login** button on the landing page
 3. You will be redirected to the university login page (Keycloak)
 4. Enter your university credentials (TUM ID and password)
@@ -51,7 +51,7 @@ The menu items you see depend on your assigned role:
 
 ## Understanding User Roles
 
-StaffPlan has four user roles with different access levels:
+Position Manager has four user roles with different access levels:
 
 ### Administrator (Admin)
 
@@ -164,7 +164,7 @@ The Position Finder uses a sophisticated matching algorithm to find the best ava
 
 #### Step 1: Finding Candidate Positions
 
-First, StaffPlan identifies all positions that could potentially accommodate your employee:
+First, Position Manager identifies all positions that could potentially accommodate your employee:
 
 1. **Grade Matching**: Only positions with a matching or higher salary grade are considered. For example, if you search for an E13 employee, both E13 and E14 positions will be included (since E14 has a higher budget), but E12 positions will be excluded (insufficient budget).
 
@@ -174,7 +174,7 @@ First, StaffPlan identifies all positions that could potentially accommodate you
 
 #### Step 2: Checking Availability Throughout the Entire Period
 
-This is the most important step. StaffPlan ensures the position can accommodate your employee **for the entire time period**, not just on the start date.
+This is the most important step. Position Manager ensures the position can accommodate your employee **for the entire time period**, not just on the start date.
 
 **Why this matters:** A position might be 80% available today but fully occupied three months from now. The algorithm checks every date in your requested period and uses the **worst-case availability** to ensure your employee has a guaranteed spot throughout their entire contract.
 
@@ -222,14 +222,14 @@ Positions with fewer existing employees are preferred because they're simpler to
 
 #### Step 4: Generating Split Suggestions
 
-If no single position can meet your requirements, StaffPlan suggests **combinations** of positions:
+If no single position can meet your requirements, Position Manager suggests **combinations** of positions:
 
 1. **Finding partial matches**: Identifies all positions with some available capacity
 2. **Combining positions**: Tests combinations of 2, 3, or 4 positions
 3. **Ranking combinations**: Sorts by fewest positions needed, then by minimal excess
 
 **Example:** You need 100% employment but no single position has that capacity.
-StaffPlan might suggest: Position A (50%) + Position B (50%) = 100% total
+Position Manager might suggest: Position A (50%) + Position B (50%) = 100% total
 
 The system returns up to 8 suggestions, preferring:
 - Fewer positions (2 splits better than 3)
@@ -511,7 +511,7 @@ A: Common reasons:
 
 **Q: What is a "split suggestion"?**
 
-A: When no single position can fulfill your requirements, StaffPlan suggests combining multiple partial positions. For example, two 50% positions could cover a 100% need. The algorithm:
+A: When no single position can fulfill your requirements, Position Manager suggests combining multiple partial positions. For example, two 50% positions could cover a 100% need. The algorithm:
 - Tests combinations of 2, 3, and 4 positions
 - Filters those that meet your total percentage requirement
 - Ranks them by fewest positions needed and minimal excess
@@ -565,7 +565,7 @@ A: There are three ways:
 
 **Q: What browsers are supported?**
 
-A: StaffPlan works best with:
+A: Position Manager works best with:
 - Google Chrome (recommended)
 - Mozilla Firefox
 - Microsoft Edge
@@ -586,7 +586,7 @@ A: Your login session has timed out. Simply refresh the page and log in again.
 
 ## Quick Tips
 
-- **Bookmark the application**: Save the StaffPlan URL for easy access
+- **Bookmark the application**: Save the Position Manager URL for easy access
 - **Use filters**: If pages load slowly, use filters to reduce the displayed data
 - **Check your role**: If you cannot see expected features, verify your role is correct with an administrator
 - **Clear browser cache**: If you experience display issues, try clearing your browser's cache and cookies

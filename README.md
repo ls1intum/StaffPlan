@@ -1,14 +1,14 @@
-# StaffPlan
+# Position Manager
 
 Strategic Staff and Budget Planning - A web application for managing staff positions, research groups, and budget planning at research institutions.
 
-> **📖 New to StaffPlan?** Check out the User Guide for step-by-step instructions on using all features:
+> **📖 New to Position Manager?** Check out the User Guide for step-by-step instructions on using all features:
 > - [English](docs/USER_GUIDE.md)
 > - [Deutsch](docs/USER_GUIDE_DE.md)
 
 ## Overview
 
-StaffPlan helps universities and research institutions:
+Position Manager helps universities and research institutions:
 - Track and visualize staff positions over time
 - Find optimal position matches for new employees
 - Manage research groups and their professors
@@ -566,8 +566,8 @@ Before submitting changes:
 
 | Document | Description |
 |----------|-------------|
-| **[User Guide (English)](docs/USER_GUIDE.md)** | Step-by-step instructions for using StaffPlan |
-| **[Benutzerhandbuch (Deutsch)](docs/USER_GUIDE_DE.md)** | Schritt-für-Schritt-Anleitung für die Nutzung von StaffPlan |
+| **[User Guide (English)](docs/USER_GUIDE.md)** | Step-by-step instructions for using Position Manager |
+| **[Benutzerhandbuch (Deutsch)](docs/USER_GUIDE_DE.md)** | Schritt-für-Schritt-Anleitung für die Nutzung von Position Manager |
 | **[API Documentation](http://localhost:8080/swagger-ui.html)** | Interactive API explorer (available when server is running) |
 | **[CLAUDE.md](CLAUDE.md)** | Instructions for AI coding assistants |
 

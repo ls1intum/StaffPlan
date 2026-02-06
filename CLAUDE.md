@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-StaffPlan is a Strategic Staff and Budget Planning web application built with Spring Boot 4.0 (Java 25), Angular 21, PostgreSQL, and Keycloak for authentication.
+Position Manager is a Strategic Staff and Budget Planning web application built with Spring Boot 4.0 (Java 25), Angular 21, PostgreSQL, and Keycloak for authentication.
 
 ## Build & Development Commands
 

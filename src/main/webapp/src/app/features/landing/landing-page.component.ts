@@ -10,7 +10,7 @@ import { SecurityStore } from '../../core/security';
       @if (securityStore.isLoading()) {
         <p>Laden...</p>
       } @else {
-        <h2>Willkommen bei StaffPlan</h2>
+        <h2>Willkommen bei Position Manager</h2>
         <p>Verwalten Sie Ihre Stellen effizient.</p>
         <p>Bitte nutzen Sie die Anmelden-Schaltfläche oben, um auf die Anwendung zuzugreifen.</p>
       }

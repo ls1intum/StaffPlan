@@ -3,7 +3,7 @@
 
 <@layout.registrationLayout displayInfo=social.displayInfo!false; section>
     <#if section = "title">
-        Sign in to ${realm.displayName!'StaffPlan'}
+        Sign in to ${realm.displayName!'Position Manager'}
     <#elseif section = "form">
         <div class="box-container">
         <#if realm.password>

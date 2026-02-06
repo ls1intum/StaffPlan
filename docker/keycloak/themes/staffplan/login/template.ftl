@@ -29,7 +29,7 @@
             <div class="logo-container">
                 <img class="tum-logo" src="${url.resourcesPath}/img/tum-logo.svg" alt="TUM Logo">
             </div>
-            <h2>StaffPlan</h2>
+            <h2>Position Manager</h2>
 
             <#if displayMessage && message?has_content>
                 <div class="alert alert-${message.type}">
