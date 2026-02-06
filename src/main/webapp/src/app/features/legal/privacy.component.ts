@@ -21,7 +21,9 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
 
         <section>
           <h2>2. Erhebung und Verarbeitung personenbezogener Daten</h2>
-          <p>Bei der Nutzung von Position Manager werden folgende personenbezogene Daten verarbeitet:</p>
+          <p>
+            Bei der Nutzung von Position Manager werden folgende personenbezogene Daten verarbeitet:
+          </p>
           <ul>
             <li>Name und Vorname</li>
             <li>E-Mail-Adresse</li>
