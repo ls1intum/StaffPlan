@@ -24,16 +24,158 @@ concurrency: ${{ github.event.inputs.environment_name }}
 
 env:
   CI: true
-  PR_AUTO_BUILD_FILE_NAME: 'build.yml'
   RAW_URL: https://raw.githubusercontent.com/${{ github.repository }}/${{ github.event.inputs.branch_name }}
 
 jobs:
+  prepare-deploy:
+    runs-on: ubuntu-latest
+    outputs:
+      image-tag: ${{ steps.resolve-tag.outputs.image-tag }}
+    steps:
+      - name: Resolve image tag
+        id: resolve-tag
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          IMAGE_TAG="${{ inputs.commit_sha }}"
+          if [ -z "$IMAGE_TAG" ]; then
+            BRANCH="${{ inputs.branch_name }}"
+            DEFAULT_BRANCH=$(gh api "repos/${{ github.repository }}" --jq '.default_branch')
+            if [ "$BRANCH" = "$DEFAULT_BRANCH" ]; then
+              IMAGE_TAG="latest"
+            else
+              PR_NUMBER=$(gh api "repos/${{ github.repository }}/pulls?head=${{ github.repository_owner }}:${BRANCH}&state=open" --jq '.[0].number // empty')
+              if [ -z "$PR_NUMBER" ]; then
+                echo "::error::No image tag provided and no open PR found for branch ${BRANCH}"
+                exit 1
+              fi
+              IMAGE_TAG="pr-${PR_NUMBER}"
+            fi
+          fi
+          echo "image-tag=${IMAGE_TAG}" >> "$GITHUB_OUTPUT"
+          echo "Resolved image tag: ${IMAGE_TAG}"
+
+      - name: Verify image exists in GHCR
+        run: |
+          IMAGE_TAG="${{ steps.resolve-tag.outputs.image-tag }}"
+          TOKEN=$(echo -n "${{ secrets.GITHUB_TOKEN }}" | base64)
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            -H "Authorization: Bearer ${TOKEN}" \
+            -H "Accept: application/vnd.oci.image.index.v1+json, application/vnd.docker.distribution.manifest.v2+json" \
+            "https://ghcr.io/v2/ls1intum/staffplan-server/manifests/${IMAGE_TAG}")
+          if [ "$STATUS" != "200" ]; then
+            echo "::error::Image ghcr.io/ls1intum/staffplan-server:${IMAGE_TAG} not found (HTTP ${STATUS})"
+            exit 1
+          fi
+          echo "Image exists with tag: ${IMAGE_TAG}"
+
   deploy:
-    uses: ls1intum/.github/.github/workflows/deploy-docker-compose.yml@main
-    with:
-      environment: ${{ inputs.environment_name }}
-      docker-compose-file: './docker/docker-compose-prod.yml'
-      main-image-name: ghcr.io/ls1intum/staffplan-server
-      image-tag: ${{ inputs.commit_sha }}
-      deployment-base-path: '/opt/staffplan'
-    secrets: inherit
+    needs: prepare-deploy
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment_name }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Extract compose file basename
+        id: compose
+        run: |
+          COMPOSE_FILE="./docker/docker-compose-prod.yml"
+          BASENAME=$(basename "$COMPOSE_FILE")
+          cp "$COMPOSE_FILE" "./$BASENAME"
+          echo "basename=${BASENAME}" >> "$GITHUB_OUTPUT"
+
+      - name: Create .env file
+        env:
+          VARS_CONTEXT: ${{ toJson(vars) }}
+          SECRETS_CONTEXT: ${{ toJson(secrets) }}
+        run: |
+          ENV_FILE=".env"
+          echo "ENVIRONMENT=${{ inputs.environment_name }}" > "$ENV_FILE"
+          echo "IMAGE_TAG=${{ needs.prepare-deploy.outputs.image-tag }}" >> "$ENV_FILE"
+
+          # Add all vars except deployment-specific ones
+          echo "$VARS_CONTEXT" | jq -r '
+            to_entries[]
+            | select(.key != "DEPLOYMENT_GATEWAY_PORT"
+                and .key != "DEPLOYMENT_GATEWAY_USER"
+                and .key != "DEPLOYMENT_GATEWAY_HOST"
+                and .key != "VM_USERNAME"
+                and .key != "VM_HOST")
+            | "\(.key)=\(.value | @json)"
+          ' >> "$ENV_FILE"
+
+          # Add all secrets except deployment-specific ones
+          echo "$SECRETS_CONTEXT" | jq -r '
+            to_entries[]
+            | select(.key != "github_token"
+                and .key != "DOCKER_USERNAME"
+                and .key != "DOCKER_PASSWORD"
+                and .key != "DEPLOYMENT_GATEWAY_SSH_KEY"
+                and .key != "VM_SSH_PRIVATE_KEY")
+            | "\(.key)=\(.value | @json)"
+          ' >> "$ENV_FILE"
+
+      - name: Copy files to VM
+        uses: appleboy/scp-action@v1.0.0
+        with:
+          host: ${{ vars.VM_HOST }}
+          username: ${{ vars.VM_USERNAME }}
+          key: ${{ secrets.VM_SSH_PRIVATE_KEY }}
+          proxy_host: ${{ vars.DEPLOYMENT_GATEWAY_HOST }}
+          proxy_username: ${{ vars.DEPLOYMENT_GATEWAY_USER }}
+          proxy_port: ${{ vars.DEPLOYMENT_GATEWAY_PORT }}
+          proxy_key: ${{ secrets.DEPLOYMENT_GATEWAY_SSH_KEY }}
+          source: "${{ steps.compose.outputs.basename }},.env"
+          target: "/opt/staffplan"
+          strip_components: 0
+
+      - name: Pre-pull images
+        uses: appleboy/ssh-action@v1.2.3
+        with:
+          host: ${{ vars.VM_HOST }}
+          username: ${{ vars.VM_USERNAME }}
+          key: ${{ secrets.VM_SSH_PRIVATE_KEY }}
+          proxy_host: ${{ vars.DEPLOYMENT_GATEWAY_HOST }}
+          proxy_username: ${{ vars.DEPLOYMENT_GATEWAY_USER }}
+          proxy_port: ${{ vars.DEPLOYMENT_GATEWAY_PORT }}
+          proxy_key: ${{ secrets.DEPLOYMENT_GATEWAY_SSH_KEY }}
+          script_stop: true
+          script: |
+            docker compose -f "/opt/staffplan/${{ steps.compose.outputs.basename }}" --env-file="/opt/staffplan/.env" pull
+
+      - name: Stop application
+        uses: appleboy/ssh-action@v1.2.3
+        with:
+          host: ${{ vars.VM_HOST }}
+          username: ${{ vars.VM_USERNAME }}
+          key: ${{ secrets.VM_SSH_PRIVATE_KEY }}
+          proxy_host: ${{ vars.DEPLOYMENT_GATEWAY_HOST }}
+          proxy_username: ${{ vars.DEPLOYMENT_GATEWAY_USER }}
+          proxy_port: ${{ vars.DEPLOYMENT_GATEWAY_PORT }}
+          proxy_key: ${{ secrets.DEPLOYMENT_GATEWAY_SSH_KEY }}
+          script_stop: true
+          script: |
+            COMPOSE_FILE="/opt/staffplan/${{ steps.compose.outputs.basename }}"
+            ENV_FILE="/opt/staffplan/.env"
+            if [ -f "$COMPOSE_FILE" ]; then
+              if [ -f "$ENV_FILE" ]; then
+                docker compose -f "$COMPOSE_FILE" --env-file="$ENV_FILE" down --remove-orphans
+              else
+                docker compose -f "$COMPOSE_FILE" down --remove-orphans
+              fi
+            fi
+
+      - name: Start application
+        uses: appleboy/ssh-action@v1.2.3
+        with:
+          host: ${{ vars.VM_HOST }}
+          username: ${{ vars.VM_USERNAME }}
+          key: ${{ secrets.VM_SSH_PRIVATE_KEY }}
+          proxy_host: ${{ vars.DEPLOYMENT_GATEWAY_HOST }}
+          proxy_username: ${{ vars.DEPLOYMENT_GATEWAY_USER }}
+          proxy_port: ${{ vars.DEPLOYMENT_GATEWAY_PORT }}
+          proxy_key: ${{ secrets.DEPLOYMENT_GATEWAY_SSH_KEY }}
+          script_stop: true
+          script: |
+            docker compose -f "/opt/staffplan/${{ steps.compose.outputs.basename }}" --env-file="/opt/staffplan/.env" up -d
